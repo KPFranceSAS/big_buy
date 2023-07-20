@@ -1,0 +1,21 @@
+{% if  entity.instance.status ==  -1 %}
+    <span class="badge badge-danger">
+		Error
+	</span>
+{% elseif  entity.instance.status == 1 %}
+    <span class="badge badge-info">
+		Launched
+	</span>
+{% elseif  entity.instance.status == 2 %}
+    <span class="badge badge-success">
+		Done
+	</span>
+{% elseif  entity.instance.status == -2 %}
+    <span class="badge badge-secondary">
+		Cancelled
+	</span>
+{% else %}
+	<span class="badge badge-default">
+		On queue
+	</span>
+{% endif %}

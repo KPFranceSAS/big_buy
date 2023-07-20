@@ -1,0 +1,19 @@
+# Read the documentation at https://github.com/thephpleague/flysystem-bundle/blob/master/docs/1-getting-started.md
+flysystem:
+    storages:
+        default.storage:
+            adapter: 'local'
+            options:
+                directory: '%kernel.project_dir%/var/storage/default'
+        bigBuy.storage:
+            adapter: 'sftp'
+            options:
+                host: '%env(SFTP_HOST)%'
+                port: '%env(int:SFTP_PORT)%'
+                username: '%env(SFTP_USER)%'
+                password: '%env(SFTP_PWD)%'
+                root: '%env(SFTP_ROOT)%'
+                timeout: 10
+                directoryPerm: 0744
+                permPublic: 0700
+                permPrivate: 0744

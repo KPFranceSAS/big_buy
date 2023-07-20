@@ -1,0 +1,15 @@
+{% if  item.level == 'error' %}
+	{% set class = "danger" %}
+{% elseif  item.level == 'success' %}
+	{% set class = "success" %}
+{% elseif  item.level == 'warning' %}
+	{% set class = "warning" %}
+{% else %}
+	{% set class = "secondary" %}
+{% endif %}
+<li>
+	<span class="badge badge-{{class}}">
+		{{item.date}}
+	</span>
+	{{item.content}}
+</li>

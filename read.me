@@ -1,0 +1,24 @@
+Symfony 
+
+
+Magento API
+https://developer.adobe.com/commerce/webapi/rest/quick-reference/
+
+crontab 
+#master synchro products
+45 1 * * * php8.1 /home/prod/platformb2b-helper/bin/console app:master-sync-products-magento -vvv
+45 5 * * * php8.1 /home/prod/platformb2b-helper/bin/console app:master-sync-products-magento -vvv
+
+#check for new customers requests
+*/10 * * * * php8.1 /home/prod/platformb2b-helper/bin/console app:sync-account-requests-from-magento-to-dynamics  -vvv --env=prod
+
+#check for customers to create
+*/15 * * * php8.1 /home/prod/platformb2b-helper/bin/console app:sync-customers-creation-from-bc   -vvv --env=prod
+30 */2 * * * php8.1 /home/prod/platformb2b-helper/bin/console app:sync-customers-update-from-bc   -vvv --env=prod
+
+#inventory 
+*/20 * * * * php8.1 /home/prod/platformb2b-helper/bin/console app:sync-inventory-to-magento  -vvv
+
+#orders
+*/5 * * * * php8.1 /home/prod/platformb2b-helper/bin/console app:sync-orders-creation-from-magento   -vvv --env=prod
+5 * * * * php8.1 /home/prod/platformb2b-helper/bin/console app:sync-orders-update-from-bc  -vvv --env=prod

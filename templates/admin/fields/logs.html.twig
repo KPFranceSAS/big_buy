@@ -1,0 +1,5 @@
+<ul>
+   {% for item in field.value %}
+       {% include 'admin/fields/renderLog.html.twig' with {"item" : item}  %}
+   {% endfor %}
+</ul>
