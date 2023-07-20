@@ -160,7 +160,7 @@ class PricesFromBcSync
         foreach ($itemPrices as $itemPrice) {
             $itemPriceFormat = $this->transformPrice($itemPrice, $calculateVat);
             if (($itemPriceFormat['StartingDate']==null || $itemPriceFormat['StartingDate'] <= $now)
-                && ($itemPriceFormat['EndingDate']==null || $itemPriceFormat['EndingDate'] >= $now)
+                && ($itemPriceFormat['EndingDate']==null || $itemPriceFormat['EndingDate'] > $now)
                 && $itemPriceFormat['CurrencyCode'] == 'EUR'
             ) {
                 if (!$bestPrice) {
