@@ -30,10 +30,10 @@ abstract class AdminCrudController extends AbstractCrudController
         return $crud
             ->setEntityLabelInSingular($this->getName())
             ->setEntityLabelInPlural($this->getName() . 's')
-            ->setDateTimeFormat('yyyy-MM-dd HH:mm')
+            ->setDateTimeFormat('dd-MM-yyyy HH:mm')
             ->setDefaultSort($this->getDefautOrder())
             ->setPaginatorPageSize(100)
-            ->showEntityActionsInlined();
+            ->showEntityActionsInlined(false);
     }
     public function configureActions(Actions $actions): Actions
     {

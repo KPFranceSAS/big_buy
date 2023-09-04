@@ -1,0 +1,79 @@
+{% extends '@!EasyAdmin/layout.html.twig' %}
+
+
+{% block body_id 'ea-edit-' %}
+{% block body_class 'ea-edit ea-edit-' %}
+{% block content_title %}
+	Import pricing
+{% endblock %}
+{% block main %}
+
+	{% block new_form %}
+		{{ form(form) }}
+    {% endblock new_form %}
+
+
+	{% set urlCsv= ea_url()
+			.setDashboard('App\\Controller\\Admin\\DashboardController')
+			.setController('App\\Controller\\Admin\\ImportPricingCrudController')
+			.setAction('createCsvSampleFile')
+			.set('typeFile', 'csv')
+	 %}
+
+    {% set urlXls= ea_url()
+		.setDashboard('App\\Controller\\Admin\\DashboardController')
+		.setController('App\\Controller\\Admin\\ImportPricingCrudController')
+		.setAction('createCsvSampleFile')
+		.set('typeFile', 'xlsx')
+	 %}
+
+
+		<div class="mt-5">
+			<div class="alert alert-info">
+				<p>The file you import need some required columns to be imported.<br/>
+                For csv file, the column should be separated by point comma.</p>
+				<p>
+					<a class="btn btn-primary" href="{{urlCsv}}" target="_blank"><i class="fas fa-file-csv"></i> Download csv with column</a> 
+                	<a class="btn btn-primary" href="{{urlXls}}" target="_blank"><i class="fas fa-file-excel"></i> Download xlsx with column</a>
+				</p>
+			</div>
+
+
+			
+			<div class="mt-5">
+						<table class="table datagrid table-condensed">
+							<thead>
+								<tr>
+									<th>Field name</th>
+									<th>Field description</th>
+									<th>Mandatory</th>
+									<th>Values</th>
+									<th>Comments</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>sku</td>
+									<td>Product SKU</td>
+									<td>X</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								
+									<tr>
+										<td>price</td>
+										<td>Unit Price </td>
+										<td>x</td>
+										<td>numeric</td>
+										<td>
+										</td>
+									</tr>
+							</tbody>
+				</table>
+			</div>
+			
+
+			
+		</div>
+
+	{% endblock %}

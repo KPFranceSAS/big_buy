@@ -4,8 +4,10 @@ namespace App\Controller\Admin;
 
 use App\Entity\AccountRequest;
 use App\Entity\Customer;
+use App\Entity\ImportPricing;
 use App\Entity\MagentoRequest;
 use App\Entity\Product;
+use App\Entity\SaleOrder;
 use App\Entity\User;
 use App\Entity\WebOrder;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
@@ -25,16 +27,14 @@ class DashboardController extends AbstractDashboardController
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
-            ->setTitle('Platform b2b');
+            ->setTitle('Big Buy');
     }
 
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::linkToCrud('Order', 'fa fa-shopping-cart', WebOrder::class);
+        yield MenuItem::linkToCrud('Order', 'fas fa-shopping-cart', SaleOrder::class);
         yield MenuItem::linkToCrud('Product', 'fas fa-barcode', Product::class);
-        yield MenuItem::linkToCrud('Customer', 'fas fa-user-tie', Customer::class);
-        yield MenuItem::linkToCrud('Account request', 'fas fa-user-edit', AccountRequest::class);
-        yield MenuItem::linkToCrud('Magento sync', 'fab fa-magento', MagentoRequest::class);
+        yield MenuItem::linkToCrud('Import', 'fas fa-upload', ImportPricing::class);
         yield MenuItem::linkToCrud('User', 'fa fa-user', User::class);
     }
 }

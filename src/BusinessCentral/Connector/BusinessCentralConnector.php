@@ -630,6 +630,17 @@ abstract class BusinessCentralConnector
     }
 
 
+     /**
+    * Sale order
+    */
+
+    public function createSaleOrderLine(string $idOrder, array $orderLine): ?array
+    {
+        return $this->doPostRequest(
+            self::EP_SALES_ORDERS . '(' . $idOrder . ')/'.self::EP_SALES_ORDERS_LINE,
+            $orderLine
+        );
+    }
 
 
     /**

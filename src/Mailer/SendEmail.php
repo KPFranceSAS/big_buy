@@ -24,7 +24,7 @@ class SendEmail
         $email = (new Email())
             ->from(new Address('devops@kpsport.com', 'DEVOPS'))
             ->to(...$to)
-            ->subject("[PLATFORM B2B] ".$title)
+            ->subject("[BigBuy] ".$title)
             ->html($text);
         $this->mailer->send($email);
     }

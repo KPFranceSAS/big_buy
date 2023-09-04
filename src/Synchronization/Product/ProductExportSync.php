@@ -3,8 +3,7 @@
 namespace App\Synchronization\Product;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
-use App\BusinessCentral\Connector\BusinessCentralAggregator;
-use App\BusinessCentral\Connector\BusinessCentralConnector;
+use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Mailer\SendEmail;
 use App\Pim\AkeneoConnector;
 use Doctrine\Persistence\ManagerRegistry;
@@ -12,10 +11,9 @@ use League\Csv\Writer;
 use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 
-class ProductSync
+class ProductExportSync
 {
 
-    private $bcConnector;
 
     private $manager;
 
@@ -23,12 +21,11 @@ class ProductSync
         private LoggerInterface $logger,
         private AkeneoConnector $akeneoConnector,
         private ManagerRegistry $managerRegistry,
-        private BusinessCentralAggregator $businessCentralAggregator,
+        private KitPersonalizacionSportConnector $bcConnector,
         private FilesystemOperator $defaultStorage,
         private FilesystemOperator $bigBuyStorage,
         private SendEmail $sendEmail
     ) {
-        $this->bcConnector = $this->businessCentralAggregator->getBusinessCentralConnector(BusinessCentralConnector::KIT_PERSONALIZACION_SPORT);
         $this->manager = $this->managerRegistry->getManager();
     }
 
@@ -38,21 +35,12 @@ class ProductSync
         /** @var  array $products */
         $products = $this->getProductsEnabledOnChannel();
         $productToArrays=[];
-        $base = ['sku','brandName','ean','erp_name', 'parent','color', 'size', 'family','length', "width" , "height" , "weight",'package_length', "package_width" , "package_height" , "package_weight", "title", "description" ];
-        $header = [];
         foreach ($products as $product) {
             $productToArray = $this->flatProduct($product);
-            $headerProduct = array_keys($productToArray);
-            foreach ($headerProduct as $headerP) {
-                if (!in_array($headerP, $header) && !in_array($headerP, $base)) {
-                    $header[] = $headerP;
-                }
-            }
+           
             $productToArrays[]= $productToArray;
         }
-        sort($header);
-        $finalHeader = array_merge($base, $header);
-        $this->sendProducts($productToArrays, $finalHeader);
+        $this->sendProducts($productToArrays);
     }
 
 
@@ -65,8 +53,11 @@ class ProductSync
             'ean' => $this->getAttributeSimple($product, 'ean'),
             'erp_name' => $this->getAttributeSimple($product, 'erp_name'),
             'family' => $this->getFamilyName($product['family'], $this->getLocale()),
-            'categories' => implode(',', $product['categories']),
+            'category' => $this->getCategoriePath($product['categories']),
             'parent' => $product['parent'],
+            'title' => $this->getAttributeSimple($product, "article_name", $this->getLocale()),
+            'brandName' => $this->getAttributeChoice($product, 'brand', $this->getLocale()),
+            'description' =>  $this->getAttributeSimple($product, 'description', $this->getLocale())
         ];
 
         for ($i = 1; $i <= 5;$i++) {
@@ -74,36 +65,8 @@ class ProductSync
             $flatProduct['image_'.$i] =$imageLocale ? $imageLocale : $this->getAttributeSimple($product, 'image_url_'.$i);
         }
 
-        $flatProduct['title'] = $this->getAttributeSimple($product, "article_name", $this->getLocale());
-        
-        $descriptionFinal = $this->getAttributeSimple($product, 'description', $this->getLocale());
-        $flatProduct['description'] = $descriptionFinal ?  $this->removeNewLine($descriptionFinal) : '';
 
-        $valueGarantee =  $this->getAttributeChoice($product, 'manufacturer_guarantee', $this->getLocale());
-        if ($valueGarantee) {
-            $flatProduct['warranty'] = (int)$valueGarantee.' years';
-        }
-
-        $fieldsToConvert = [
-            "brandName" => [
-                "field" => "brand",
-                "type" => "choice",
-            ],
-            "color" => [
-                "field" => "color",
-                "type" => "choice",
-            ],
-            "size" => [
-                "field" => "size",
-                "type" => "choice",
-            ],
-            "internal_storage_memory" => [
-                "field" => 'internal_storage_memory',
-                "type" => "unit",
-                "unit" => 'giga_octet',
-                "convertUnit" => 'Go' ,
-                'round' => 0
-            ],
+        $dimensionsToConvert = [
             "length" => [
                 "field" => 'product_lenght',
                 "type" => "unit",
@@ -162,13 +125,109 @@ class ProductSync
             ],
          ];
 
-        foreach ($fieldsToConvert as $fieldMirakl => $fieldPim) {
-            if ($fieldPim['type']=='unit') {
-                $valueConverted = $this->getAttributeUnit($product, $fieldPim['field'], $fieldPim['unit'], $fieldPim['round']);
-                $flatProduct[$fieldMirakl] = $valueConverted;
-            } elseif ($fieldPim['type']=='choice') {
-                $flatProduct[$fieldMirakl] = $this->getAttributeChoice($product, $fieldPim['field'], $this->getLocale());
+
+        foreach ($dimensionsToConvert as $fieldMirakl => $fieldPim) {
+            $valueConverted = $this->getAttributeUnit($product, $fieldPim['field'], $fieldPim['unit'], $fieldPim['round']);
+            $flatProduct[$fieldMirakl] = $valueConverted;
+        }
+
+
+
+        $flatProduct ['attributes'] = [];
+
+
+
+        $multichoices = [
+            "technology",
+            "compatibility_connectivity",
+            'cam_features', 
+            'activity_tracking',
+            "eu_energy_label_efficiency_class" ,
+            "screen_resolution", 
+            "screen_technology",
+            "sound_technology",
+            "sensors",
+            "technology",
+            "intelligent_technology", 
+            "smart_functions",
+            "intelligent_technology", 
+            "video_quality"
+        ];
+
+        foreach ($multichoices as $multichoice) {
+            $valueConverted = $this->getAttributeMultiChoice($product, $multichoice, $this->getLocale());
+            if($valueConverted) {
+                $flatProduct ['attributes'][$multichoice] = $valueConverted;
             }
+        }
+
+        $choices = [
+            "color",
+            "size",
+            "battery_type",
+            "power_source_type"
+        ];
+
+        foreach ($choices as $choice) {
+            $valueConverted = $this->getAttributeChoice($product, $choice, $this->getLocale());
+            if($valueConverted) {
+                $flatProduct ['attributes'][$choice] = $valueConverted;
+            }
+        }
+
+
+        $units = [
+            [
+                "field" => 'internal_storage_memory',
+                "unit" => 'giga_octet',
+                "convertUnit" => 'Go' ,
+                'round' => 0
+            ],
+            [
+                "field" => 'battery_power',
+                "unit" => 'MILLIAMPEREHOUR',
+                "convertUnit" => 'mAH' ,
+                'round' => 0
+            ],
+
+            [
+                "field" => 'battery_capacity_wh',
+                "unit" => 'WATTHOUR',
+                "convertUnit" => 'Wh' ,
+                'round' => 0
+            ],
+            [
+                "field" => 'autonomy',
+                "unit" => 'MINUTE',
+                "convertUnit" => 'min' ,
+                'round' => 0
+            ],
+            [
+                "field" => 'brightness',
+                "unit" => 'LUMEN',
+                "convertUnit" => 'lm' ,
+                'round' => 0
+            ],
+            [
+                "field" => 'output_power',
+                "unit" => 'AMPERE',
+                "convertUnit" => 'A' ,
+                'round' => 0
+            ],
+            [
+                "field" => 'ram_memory',
+                "unit" => 'giga_octet',
+                "convertUnit" => 'Go' ,
+                'round' => 0
+            ],
+         ];
+
+        foreach ($units as $fieldPim) {
+                $valueConverted = $this->getAttributeUnit($product, $fieldPim['field'], $fieldPim['unit'], $fieldPim['round']);
+                if($valueConverted) {
+                    $valueConverted = $valueConverted.' '.$fieldPim['convertUnit'];
+                    $flatProduct ['attributes'][$fieldPim['field']] = $valueConverted;
+                }
         }
         return $flatProduct;
     }
@@ -196,40 +255,19 @@ class ProductSync
 
 
 
-    public function sendProducts(array $products, $header)
+    public function sendProducts(array $products)
     {
-        $csv = Writer::createFromString();
-        $csv->setDelimiter(';');
-        $csv->insertOne($header);
         $this->logger->info("start export ".count($products)." products");
-        foreach ($products as $product) {
-            $productArray = $this->addProduct($product, $header);
-            $csv->insertOne(array_values($productArray));
-        }
-        $csvContent = $csv->toString();
-        $filename = 'export_products_sftp_'.date('Ymd_His').'.csv';
+        $jsonCOntent = json_encode($products);
+        $filename = 'export_products_sftp_'.date('Ymd_His').'.json';
         $this->logger->info("start export products locally");
-        $this->defaultStorage->write('products/'.$filename, $csvContent);
+        $this->defaultStorage->write('products/'.$filename, $jsonCOntent);
         $this->logger->info("start export products on big buy");
-        $this->bigBuyStorage->write('products/products.csv', $csvContent);
+        $this->bigBuyStorage->write('Products/products.json', $jsonCOntent);
     }
 
 
-    private function addProduct(array $product, array $header): array
-    {
-        $productArray = array_fill_keys($header, '');
-        
-        foreach ($header as $column) {
-            if (array_key_exists($column, $product)) {
-                $productArray[$column]=$product[$column];
-            }
-        }
-
-        return $productArray;
-    }
-
-
-
+   
 
     protected function getAxesVariation($family, $familyVariant): array
     {
@@ -429,6 +467,7 @@ class ProductSync
             "SQUARE_CENTIMETER" =>0.0001,
             "SQUARE_MILLIMETER" =>0.000001,
             "SQUARE_KILOMETER" =>1000000,
+            "SQUARE_INCH" => 0.00064516,
 
             "KILOMETER" => 1000.0,
             "METER" => 1.0,
@@ -469,7 +508,17 @@ class ProductSync
             "KILOWATT" => 1000,
             "MEGAWATT" => 1000000,
 
+            "MILLISECOND" => 0.001,
+            "SECOND" => 1,
+            "MINUTE" => 60,
+            "HOUR" => 3600,
+            "DAY" => 86400,
+            "WEEK" => 604800,
+            "MONTH" => 2628000,
+            "YEAR" => 31536000,
 
+            "LUMEN" => 1,
+            "NIT" => 0.2918855809
         ];
 
         if (!array_key_exists($unitBase, $factors) || !array_key_exists($unitFinal, $factors)) {
@@ -534,4 +583,72 @@ class ProductSync
     {
         return $this->removeNewLine(strip_tags($text));
     }
+
+
+    private $categories;
+
+    protected function getAllCategories()
+    {
+        $this->categories=[];
+        $categoriePims = $this->akeneoConnector->getAllCategories();
+        foreach($categoriePims as $category) {
+            $this->categories[ $category['code']] = $category;
+        }
+    }
+
+
+
+    protected function getCategoriePath(array $categories)
+    {
+        if(!$this->categories) {
+            $this->getAllCategories();
+        }
+        $deepestCategories = null;
+        foreach($categories as $categorie) {
+            $access = $this->getAccessCategories($categorie);
+            $lastLevel = end($access);
+            if($lastLevel && $lastLevel['code']=='kps_tech') {
+                if(!$deepestCategories || count($deepestCategories) < count($access)) {
+                    $deepestCategories = $access;
+                }
+            }
+            
+        }
+
+        if($deepestCategories) {
+            $paths = [];
+            foreach($deepestCategories as  $deepestCategorie) {
+                if($deepestCategorie['code']!='kps_tech') {
+                    $paths[]= $deepestCategorie['labels']['es_ES'];
+                }
+                
+            }
+            $pathReversed = array_reverse($paths);
+
+            return implode(" > ", $pathReversed);
+        } else {
+            return null;
+        }
+    }
+
+
+    protected function getAccessCategories($slug)
+    {
+        $access = [];
+        $continue =true;
+        while($continue) {
+            $categoryPim = $this->categories[$slug];
+            $access[]= $categoryPim;
+            if($categoryPim['parent']) {
+                $slug = $categoryPim['parent'];
+            } else {
+                $continue = false;
+            }
+        }
+        return $access;
+    }
+
+
+
+
 }

@@ -2,19 +2,19 @@
 
 namespace App\Command;
 
-use App\Synchronization\Product\ProductExportSync;
+use App\Synchronization\Product\ProductCreationFromBcSync;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'app:sync-products-to-bigbuy',
-    description: 'Send a sync file for products',
+    name: 'app:save-products',
+    description: 'Get products from Akeneo and save it on local db. Sync it with Business central',
 )]
-class SyncProductsCommand extends Command
+class SaveProductsCommand extends Command
 {
-    public function __construct(private ProductExportSync $productSync)
+    public function __construct(private ProductCreationFromBcSync $productSync)
     {
         parent::__construct();
     }

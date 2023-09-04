@@ -2,7 +2,7 @@
 
 namespace App\BusinessCentral\Model;
 
-class SaleOrderLine
+class SaleOrderLineBc
 {
     const TYPE_COMMENT = "Comment";
     const TYPE_GLACCOUNT = "Account";

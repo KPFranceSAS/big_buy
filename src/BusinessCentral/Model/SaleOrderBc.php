@@ -4,7 +4,7 @@ namespace App\BusinessCentral\Model;
 
 use App\BusinessCentral\Model\PostalAddress;
 
-class SaleOrder
+class SaleOrderBc
 {
     public const STATUS_OPEN = "Open";
     public const STATUS_RELEASED = "Released";
@@ -26,11 +26,15 @@ class SaleOrder
 
     public $number;
 
-    public $locationCode;
+    public $locationCode = 'LAROCA';
+
+    public $orderOrigin = "MARKETPLACE";
+
+    public $pendingToShip = true;
 
     public $currencyCode;
 
-    public $pricesIncludeTax = true;
+    public $pricesIncludeTax = false;
 
     public $paymentTermsId;
 

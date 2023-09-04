@@ -21,6 +21,9 @@ services:
             $akeneoUsername  : '%env(resolve:AKENEO_USERNAME)%'
             $akeneoPassword  : '%env(resolve:AKENEO_PASSWORD)%'
 
+            $closingHours  : '%env(resolve:CLOSING_HOURS)%'
+            
+
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
