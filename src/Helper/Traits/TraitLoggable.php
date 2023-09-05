@@ -33,6 +33,16 @@ trait TraitLoggable
 
 
 
+    public function addLogIfNotExists($content, $level = 'info', $user = "system"): array
+    {
+        if($this->haveNoLogWithMessage($content)) {
+            $this->addLog($content, $level, $user);
+        }
+        return $this->logs;
+    }
+
+
+
     public function checkIfMessageAlreadyAdded($logMessage): bool
     {
         return $this->haveNoLogWithMessage($logMessage) ? false : true;

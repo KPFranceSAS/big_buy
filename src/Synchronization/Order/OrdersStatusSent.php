@@ -14,8 +14,9 @@ use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Psr\Log\LoggerInterface;
+use Twig\Environment;
 
-class OrdersStatusRelease
+class OrdersStatusSent
 {
 
    
@@ -32,33 +33,34 @@ class OrdersStatusRelease
     
     public function synchronize()
     {
-        $saleOrders = $this->manager->getRepository(SaleOrder::class)->findBy(['status'=>SaleOrder::STATUS_WAITING_RELEASE]);
+        $saleOrders = $this->manager->getRepository(SaleOrder::class)->findBy(['status'=>SaleOrder::STATUS_RELEASED]);
         $datenow = new DateTime();
        
         foreach($saleOrders as $saleOrder) {
             try {
-                $this->logger->info('Check sale order has been release '.$saleOrder->getOrderNumber());
-                if(!$this->isSaleOrderRelease($saleOrder->getOrderNumber())) {
+                $this->logger->info('Check sale order has been sent '.$saleOrder->getOrderNumber());
+                if(!$this->isSaleOrderSent($saleOrder->getOrderNumber())) {
                     $nbMinutesSinceRelease = $this->getMinutesDifference($saleOrder->getReleaseDate(), $datenow);
-                    $this->logger->info('Sale order has been marked to be released '.$nbMinutesSinceRelease.' minutes ago');
-                    if($nbMinutesSinceRelease > 60) { 
-                        $log = 'Sale order '.$saleOrder->getOrderNumber().'  is not released. Please check what happens (stock, credit, customer misconfiguration, ....)';
+                    $this->logger->info('Sale order has been marked to be sent '.$nbMinutesSinceRelease.' minutes ago');
+                    if($nbMinutesSinceRelease > 720) { 
+                        $log = 'Sale order '.$saleOrder->getOrderNumber().' is not sent by warehouse. It should be received in Valencia '.$saleOrder->getArrivalTime()->format('d/m/Y H:i');
                         if($saleOrder->haveNoLogWithMessage($log)) {
                             $saleOrder->addLog($log, 'error');
                             $this->logger->critical($log);
-                            $this->sendEmail->sendAlert('Pending release order '.$saleOrder->getOrderNumber(), $log);
+                            $this->sendEmail->sendAlert('Pending shipment order '.$saleOrder->getOrderNumber(), $log);
                         }
                     }
                 } else {
-                    $saleOrder->addLog('Sale order has been released. Waiting for shipment', 'info');
-                    $saleOrder->setStatus(SaleOrder::STATUS_RELEASED);
+                    $saleOrder->addLog('Sale order has been sent', 'info');
+                    $saleOrder->setStatus(SaleOrder::STATUS_SENT_BY_WAREHOUSE);
+                    $shipmentBc = $this->bcConnector->getSaleShipmentByOrderNumber($saleOrder->getOrderNumber());
+                    $saleOrder->setShipmentNumber($shipmentBc['number']);
                 }
-                $this->manager->flush();
             } catch (Exception $e){
                 $this->logger->critical( $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
-                $this->sendEmail->sendAlert('Error OrdersStatusRelease ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
+                $this->sendEmail->sendAlert('Error OrdersStatusSent ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
             }
-            
+            $this->manager->flush();
         }
     }
 
@@ -74,18 +76,18 @@ class OrdersStatusRelease
 
 
 
-    protected function isSaleOrderRelease($orderNumber)
+    protected function isSaleOrderSent($orderNumber)
     {
         $status =  $this->bcConnector->getStatusOrderByNumber($orderNumber);
         if ($status) {
             $this->logger->info("Status found by reference to the order number " . $orderNumber);
             $statusSaleOrder =  reset($status['statusOrderLines']);
-            if (in_array($statusSaleOrder['statusCode'], ["99", "-1"])) {
-                $this->logger->info("Sale order is not released " . $orderNumber);
-                return false ;
-            } else {
-                $this->logger->info("Sale order is  released " . $orderNumber);
+            if (in_array($statusSaleOrder['statusCode'], ["3", "4"])) {
+                $this->logger->info("Sale order is sent " . $orderNumber);
                 return true ;
+            } else {
+                $this->logger->info("Sale order is not  released " . $orderNumber);
+                return false ;
             }
         }
         $this->logger->info("Status not found for moment " . $orderNumber);

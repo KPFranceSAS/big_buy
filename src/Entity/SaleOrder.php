@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Helper\Traits\TraitLoggable;
 use App\Helper\Traits\TraitTimeUpdated;
 use App\Repository\SaleOrderRepository;
+use DateInterval;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -17,9 +19,13 @@ class SaleOrder
 
     public const STATUS_OPEN = 1;
 
-    public const STATUS_RELEASE = 2;
+    public const STATUS_WAITING_RELEASE = 2;
 
-    public const STATUS_SEND = 3;
+    public const STATUS_RELEASED = 3;
+
+    public const STATUS_SENT_BY_WAREHOUSE = 4;
+
+    public const STATUS_CONFIRMED = 5;
 
 
     use TraitTimeUpdated;
@@ -46,6 +52,9 @@ class SaleOrder
     #[ORM\Column(length: 255)]
     private ?string $releaseDateString = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $shipmentNumber = null;
+
     public function __construct()
     {
         $this->saleOrderLines = new ArrayCollection();
@@ -56,6 +65,24 @@ class SaleOrder
     public function setDateReleaseFormat(): void
     {
         $this->releaseDateString = $this->releaseDate->format('Y-m-d H:i');
+    }
+
+
+    public function getLineSequence($lineSequence, $sku){
+        foreach($this->saleOrderLines as $saleOrderLine){
+            if($saleOrderLine->getLineNumber()==$lineSequence && $sku == $saleOrderLine->getSku()){
+                return $saleOrderLine;
+            }
+        }
+        return null;
+    }
+
+    public function getArrivalTime(): DateTime
+    {
+        $dateArrival = DateTime::createFromFormat('Y-m-d H:i', $this->releaseDateString);
+        $dateArrival->add(new DateInterval('P1D'));
+        $dateArrival->setTime(10, 0);
+        return $dateArrival;
     }
 
    
@@ -139,6 +166,18 @@ class SaleOrder
     public function setReleaseDateString(string $releaseDateString): static
     {
         $this->releaseDateString = $releaseDateString;
+
+        return $this;
+    }
+
+    public function getShipmentNumber(): ?string
+    {
+        return $this->shipmentNumber;
+    }
+
+    public function setShipmentNumber(?string $shipmentNumber): static
+    {
+        $this->shipmentNumber = $shipmentNumber;
 
         return $this;
     }

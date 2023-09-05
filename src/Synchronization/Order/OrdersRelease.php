@@ -7,7 +7,9 @@ use App\Entity\SaleOrder;
 use App\Mailer\SendEmail;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 use Psr\Log\LoggerInterface;
+
 class OrdersRelease
 {
 
@@ -28,13 +30,18 @@ class OrdersRelease
     {
         $saleOrders = $this->manager->getRepository(SaleOrder::class)->findBy(['status'=>SaleOrder::STATUS_OPEN]);
         $datenow = new DateTime();
-        foreach($saleOrders as $saleOrder){
-            if($saleOrder->getReleaseDate()<$datenow){
-                $saleOrderBc = $this->bcConnector->getSaleOrderByNumber($saleOrder->getOrderNumber());
-                $this->bcConnector->updateSaleOrder($saleOrderBc['id'], '*', ['pendingShipping'=>false]);
-                $saleOrder->addLog('Marked sale order to be released');
-                $saleOrder->setStatus(SaleOrder::STATUS_RELEASE);
-                $this->manager->flush();
+        foreach($saleOrders as $saleOrder) {
+            try {
+                if($saleOrder->getReleaseDate()<$datenow) {
+                    $saleOrderBc = $this->bcConnector->getSaleOrderByNumber($saleOrder->getOrderNumber());
+                    $this->bcConnector->updateSaleOrder($saleOrderBc['id'], '*', ['pendingToShip'=>false]);
+                    $saleOrder->addLog('Marked sale order to be released');
+                    $saleOrder->setStatus(SaleOrder::STATUS_WAITING_RELEASE);
+                    $this->manager->flush();
+                }
+            } catch (Exception $e) {
+                $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
+                $this->sendEmail->sendAlert('Error OrdersStatusRelease ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
             }
         }
     }

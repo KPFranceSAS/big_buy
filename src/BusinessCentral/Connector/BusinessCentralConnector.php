@@ -631,6 +631,16 @@ abstract class BusinessCentralConnector
 
 
      /**
+     * Sale order
+     */
+    public function deleteSaleOrder(string $idOrder): bool
+    {
+        return $this->doDeleteRequest(
+            self::EP_SALES_ORDERS . '(' . $idOrder . ')',
+        );
+    }
+
+     /**
     * Sale order
     */
 
@@ -730,6 +740,28 @@ abstract class BusinessCentralConnector
             self::EP_SALES_ORDERS,
             "externalDocumentNumber eq '$number' and customerNumber eq '$customer'",
             false
+        );
+    }
+
+
+    public function getAllOpenSaleOrders()
+    {
+        return $this->getElementsByArray(
+            self::EP_SALES_ORDERS,
+            "status eq 'Draft'",
+            true
+        );
+    }
+
+
+
+    public function getSaleShipmentByOrderNumber(string $number): ?array
+    {
+        return $this->getElementByNumber(
+            'salesShipments',
+            $number,
+            'orderNo',
+            ['$expand' => 'salesShipmentLines']
         );
     }
 }
