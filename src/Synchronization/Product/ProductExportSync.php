@@ -7,7 +7,6 @@ use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Mailer\SendEmail;
 use App\Pim\AkeneoConnector;
 use Doctrine\Persistence\ManagerRegistry;
-use League\Csv\Writer;
 use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
 
@@ -46,6 +45,7 @@ class ProductExportSync
 
     public function flatProduct(array $product):array
     {
+
         $this->logger->info('Flat product '.$product['identifier']);
 
         $flatProduct = [
@@ -55,9 +55,9 @@ class ProductExportSync
             'family' => $this->getFamilyName($product['family'], $this->getLocale()),
             'category' => $this->getCategoriePath($product['categories']),
             'parent' => $product['parent'],
-            'title' => $this->getAttributeSimple($product, "article_name", $this->getLocale()),
+            'title' => $this->getAttributeSimpleScopable($product, "article_name", 'Marketplace', $this->getLocale()),
             'brandName' => $this->getAttributeChoice($product, 'brand', $this->getLocale()),
-            'description' =>  $this->getAttributeSimple($product, 'description', $this->getLocale())
+            'description' =>  $this->getAttributeSimpleScopable($product, 'description', 'Marketplace', $this->getLocale())
         ];
 
         for ($i = 1; $i <= 5;$i++) {
@@ -140,18 +140,18 @@ class ProductExportSync
         $multichoices = [
             "technology",
             "compatibility_connectivity",
-            'cam_features', 
+            'cam_features',
             'activity_tracking',
-            "eu_energy_label_efficiency_class" ,
-            "screen_resolution", 
+            "screen_resolution",
             "screen_technology",
             "sound_technology",
             "sensors",
             "technology",
-            "intelligent_technology", 
+            "intelligent_technology",
             "smart_functions",
-            "intelligent_technology", 
-            "video_quality"
+            "intelligent_technology",
+            "video_quality",
+            "conexions"
         ];
 
         foreach ($multichoices as $multichoice) {
@@ -165,7 +165,12 @@ class ProductExportSync
             "color",
             "size",
             "battery_type",
-            "power_source_type"
+            "power_source_type",
+            "processor",
+            "energy_classification",
+            "graphic_card",
+            "chipset",
+            "keyboard"
         ];
 
         foreach ($choices as $choice) {
@@ -183,6 +188,14 @@ class ProductExportSync
                 "convertUnit" => 'Go' ,
                 'round' => 0
             ],
+            [
+                "field" => 'hard_drive_capacity',
+                "unit" => 'giga_octet',
+                "convertUnit" => 'Go' ,
+                'round' => 0
+            ],
+
+            
             [
                 "field" => 'battery_power',
                 "unit" => 'MILLIAMPEREHOUR',
@@ -220,15 +233,31 @@ class ProductExportSync
                 "convertUnit" => 'Go' ,
                 'round' => 0
             ],
+            [
+                "field" => 'capacity_cooking',
+                "unit" => 'LITER',
+                "convertUnit" => 'L' ,
+                'round' => 0
+            ],
+            [
+                "field" => 'power',
+                "unit" => 'WATT',
+                "convertUnit" => 'W' ,
+                'round' => 0
+            ],
+            
+
+            
          ];
 
         foreach ($units as $fieldPim) {
-                $valueConverted = $this->getAttributeUnit($product, $fieldPim['field'], $fieldPim['unit'], $fieldPim['round']);
-                if($valueConverted) {
-                    $valueConverted = $valueConverted.' '.$fieldPim['convertUnit'];
-                    $flatProduct ['attributes'][$fieldPim['field']] = $valueConverted;
-                }
+            $valueConverted = $this->getAttributeUnit($product, $fieldPim['field'], $fieldPim['unit'], $fieldPim['round']);
+            if($valueConverted) {
+                $valueConverted = $valueConverted.' '.$fieldPim['convertUnit'];
+                $flatProduct ['attributes'][$fieldPim['field']] = $valueConverted;
+            }
         }
+
         return $flatProduct;
     }
 
@@ -250,7 +279,7 @@ class ProductExportSync
             ->addFilter('brand', 'IN', ['xiaomi', 'aiper', 'victrola', 'roborock', 'xgimi'])
             ->addFilter('enabled', '=', true);
 
-        return $this->akeneoConnector->searchProducts($searchBuilder, 'Marketplace');
+        return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
     }
 
 
@@ -507,6 +536,18 @@ class ProductExportSync
             "WATT" => 1,
             "KILOWATT" => 1000,
             "MEGAWATT" => 1000000,
+
+
+            "HERTZ" => 1,
+            "KILOHERTZ" => 1000,
+            "MEGAHERTZ" => 1000000,
+            "GIGAHERTZ" => 1000000000,
+            "TERAHERTZ" => 1000000000000,
+
+
+            "PIXEL" => 1,
+            "MEGAPIXEL" => 1000000,
+            "GIGAPIXEL" => 1000000000,
 
             "MILLISECOND" => 0.001,
             "SECOND" => 1,
