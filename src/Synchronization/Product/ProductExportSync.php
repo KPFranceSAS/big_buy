@@ -4,6 +4,7 @@ namespace App\Synchronization\Product;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
+use App\Entity\Product;
 use App\Mailer\SendEmail;
 use App\Pim\AkeneoConnector;
 use Doctrine\Persistence\ManagerRegistry;
@@ -35,9 +36,14 @@ class ProductExportSync
         $products = $this->getProductsEnabledOnChannel();
         $productToArrays=[];
         foreach ($products as $product) {
-            $productToArray = $this->flatProduct($product);
-           
-            $productToArrays[]= $productToArray;
+            $productDb = $this->manager->getRepository(Product::class)->findOneBySku($product['identifier']);
+
+            if($productDb && $productDb->isEnabled()) {
+                $productToArray = $this->flatProduct($product);
+                $productToArrays[]= $productToArray;
+            }
+
+            
         }
         $this->sendProducts($productToArrays);
     }
@@ -146,10 +152,8 @@ class ProductExportSync
             "screen_technology",
             "sound_technology",
             "sensors",
-            "technology",
             "intelligent_technology",
             "smart_functions",
-            "intelligent_technology",
             "video_quality",
             "conexions"
         ];

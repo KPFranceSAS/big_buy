@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Order;
 
 use App\Synchronization\Order\OrdersStatusRelease;
+use App\Synchronization\Order\OrdersStatusSent;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -10,16 +11,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 
 #[AsCommand(
-    name: 'app:release-status-orders',
-    description: 'Check release orders status',
+    name: 'app:orders-send-status',
+    description: 'Check send orders status',
 )]
-class ReleaseStatusOrdersCommand extends Command
+class OrdersSendStatusCommand extends Command
 {
 
     private $manager;
 
 
-    public function __construct(private OrdersStatusRelease $ordersStatusRelease)
+    public function __construct(private OrdersStatusSent $ordersStatusSent)
     {
         parent::__construct();
     }
@@ -28,7 +29,7 @@ class ReleaseStatusOrdersCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->ordersStatusRelease->synchronize();
+        $this->ordersStatusSent->synchronize();
 
         return Command::SUCCESS;
     }

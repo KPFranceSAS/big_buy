@@ -3,12 +3,7 @@
 namespace App\Synchronization\Order;
 
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
-use App\BusinessCentral\Model\SaleOrderBc;
-use App\BusinessCentral\Model\SaleOrderLineBc;
-use App\Entity\Product;
 use App\Entity\SaleOrder;
-use App\Entity\SaleOrderLine;
-use App\Helper\Utils\CalculatorNext;
 use App\Mailer\SendEmail;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
@@ -41,7 +36,7 @@ class OrdersStatusRelease
                 if(!$this->isSaleOrderRelease($saleOrder->getOrderNumber())) {
                     $nbMinutesSinceRelease = $this->getMinutesDifference($saleOrder->getReleaseDate(), $datenow);
                     $this->logger->info('Sale order has been marked to be released '.$nbMinutesSinceRelease.' minutes ago');
-                    if($nbMinutesSinceRelease > 60) { 
+                    if($nbMinutesSinceRelease > 60) {
                         $log = 'Sale order '.$saleOrder->getOrderNumber().'  is not released. Please check what happens (stock, credit, customer misconfiguration, ....)';
                         if($saleOrder->haveNoLogWithMessage($log)) {
                             $saleOrder->addLog($log, 'error');
@@ -54,8 +49,8 @@ class OrdersStatusRelease
                     $saleOrder->setStatus(SaleOrder::STATUS_RELEASED);
                 }
                 $this->manager->flush();
-            } catch (Exception $e){
-                $this->logger->critical( $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
+            } catch (Exception $e) {
+                $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
                 $this->sendEmail->sendAlert('Error OrdersStatusRelease ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
             }
             

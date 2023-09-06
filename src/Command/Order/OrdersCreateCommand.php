@@ -1,27 +1,32 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Order;
 
-use App\Synchronization\Product\PricesFromBcSync;
+use App\Synchronization\Order\OrdersCreation;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'app:sync-prices-stocks-to-bigbuy',
-    description: 'Send a sync file for stock and price',
+    name: 'app:orders-create',
+    description: 'Create orders',
 )]
-class SyncPricesCommand extends Command
+class OrdersCreateCommand extends Command
 {
-    public function __construct(private PricesFromBcSync $productSync)
+
+
+    public function __construct(private OrdersCreation $ordersCreation)
     {
         parent::__construct();
     }
 
+   
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->productSync->synchronize();
+        $this->ordersCreation->synchronize();
+
         return Command::SUCCESS;
     }
 }

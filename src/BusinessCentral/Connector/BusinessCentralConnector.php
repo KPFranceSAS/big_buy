@@ -630,9 +630,9 @@ abstract class BusinessCentralConnector
     }
 
 
-     /**
-     * Sale order
-     */
+    /**
+    * Sale order
+    */
     public function deleteSaleOrder(string $idOrder): bool
     {
         return $this->doDeleteRequest(
@@ -640,7 +640,7 @@ abstract class BusinessCentralConnector
         );
     }
 
-     /**
+    /**
     * Sale order
     */
 
@@ -762,6 +762,18 @@ abstract class BusinessCentralConnector
             $number,
             'orderNo',
             ['$expand' => 'salesShipmentLines']
+        );
+    }
+
+
+
+    public function getSaleInvoiceByOrderNumber(string $number): ?array
+    {
+        return $this->getElementByNumber(
+            'salesInvoices',
+            $number,
+            'orderNumber',
+            ['$expand' => 'salesInvoiceLines']
         );
     }
 }

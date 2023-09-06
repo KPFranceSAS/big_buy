@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Order;
 
 use App\Entity\Product;
 use App\Entity\User;
@@ -26,7 +26,7 @@ class CreateSampleOrdersCommand extends Command
     private $manager;
 
 
-    public function __construct(        private FilesystemOperator $bigBuyStorage,private  ManagerRegistry $managerRegistry)
+    public function __construct(private FilesystemOperator $bigBuyStorage, private  ManagerRegistry $managerRegistry)
     {
         parent::__construct();
     }
@@ -38,21 +38,21 @@ class CreateSampleOrdersCommand extends Command
         $manager = $this->managerRegistry->getManager();
         $products = $manager->getRepository(Product::class)->findBy(['enabled'=> true ]);
         $nbOrders = rand(1, 5);
-        $header = explode(";", "id;sku;price;quantity;address;city;contactPerson;country;mobileNo;phoneCountry;province;zip;email;firstName;lastName");    
-        for($i=0;$i<$nbOrders;$i++){
-            $max = count($products)>20 ? 20 : count($products);
-            $productOrdersKey =  array_rand($products, rand(2,$max));
+        $header = explode(";", "id;sku;price;quantity;address;city;contactPerson;country;mobileNo;phoneCountry;province;zip;email;firstName;lastName");
+        for($i=0;$i<$nbOrders;$i++) {
+            $productOrdersKey =  array_rand($products, rand(2, 5));
             $orderId = date('U').$i;
             $csv = Writer::createFromString();
             $csv->setDelimiter(';');
             $csv->insertOne($header);
-            foreach( $productOrdersKey as $productOrderKey){
+            foreach($productOrdersKey as $productOrderKey) {
+                /** @var  \App\Entity\Product  $productOrder */
                 $productOrder =  $products[$productOrderKey];
                 $orderLine =array_fill_keys($header, null);
                 $orderLine["id"] = $orderId;
                 $orderLine["sku"] = $productOrder->getSku();
-                $orderLine["quantity"] = rand(1, 3);
-                $orderLine["price"] = $productOrder->getPrice();
+                $orderLine["quantity"] = rand(1, 2);
+                $orderLine["price"] = $productOrder->getPrice() ? $productOrder->getPrice() : $productOrder->getResellerPrice();
                 $csv->insertOne($orderLine);
             }
             $this->bigBuyStorage->write('Orders/Order_'.date('d_m_Y_His').'_'.$orderId.'.csv', $csv->toString());

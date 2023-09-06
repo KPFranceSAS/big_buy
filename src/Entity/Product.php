@@ -54,6 +54,15 @@ class Product
     #[ORM\Column]
     private ?bool $activeInBc = false;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $resellerPrice = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $costPrice = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $stockLaRoca = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -175,6 +184,42 @@ class Product
     public function setActiveInBc(bool $activeInBc): static
     {
         $this->activeInBc = $activeInBc;
+
+        return $this;
+    }
+
+    public function getResellerPrice(): ?float
+    {
+        return $this->resellerPrice;
+    }
+
+    public function setResellerPrice(?float $resellerPrice): static
+    {
+        $this->resellerPrice = $resellerPrice;
+
+        return $this;
+    }
+
+    public function getCostPrice(): ?float
+    {
+        return $this->costPrice;
+    }
+
+    public function setCostPrice(?float $costPrice): static
+    {
+        $this->costPrice = $costPrice;
+
+        return $this;
+    }
+
+    public function getStockLaRoca(): ?int
+    {
+        return $this->stockLaRoca;
+    }
+
+    public function setStockLaRoca(?int $stockLaRoca): static
+    {
+        $this->stockLaRoca = $stockLaRoca;
 
         return $this;
     }

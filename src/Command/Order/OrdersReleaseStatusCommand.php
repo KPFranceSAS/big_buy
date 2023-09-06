@@ -1,27 +1,35 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Order;
 
-use App\Synchronization\Product\ProductCreationFromBcSync;
+use App\Synchronization\Order\OrdersStatusRelease;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+
 #[AsCommand(
-    name: 'app:save-products',
-    description: 'Get products from Akeneo and save it on local db. Sync it with Business central',
+    name: 'app:orders-release-status',
+    description: 'Check release orders status',
 )]
-class SaveProductsCommand extends Command
+class OrdersReleaseStatusCommand extends Command
 {
-    public function __construct(private ProductCreationFromBcSync $productSync)
+
+    private $manager;
+
+
+    public function __construct(private OrdersStatusRelease $ordersStatusRelease)
     {
         parent::__construct();
     }
 
+   
+
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->productSync->synchronize();
+        $this->ordersStatusRelease->synchronize();
+
         return Command::SUCCESS;
     }
 }

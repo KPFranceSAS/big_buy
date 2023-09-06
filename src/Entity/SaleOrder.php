@@ -27,6 +27,8 @@ class SaleOrder
 
     public const STATUS_CONFIRMED = 5;
 
+    public const STATUS_INVOICED = 6;
+
 
     use TraitTimeUpdated;
 
@@ -55,6 +57,9 @@ class SaleOrder
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $shipmentNumber = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $invoiceNumber = null;
+
     public function __construct()
     {
         $this->saleOrderLines = new ArrayCollection();
@@ -68,9 +73,10 @@ class SaleOrder
     }
 
 
-    public function getLineSequence($lineSequence, $sku){
-        foreach($this->saleOrderLines as $saleOrderLine){
-            if($saleOrderLine->getLineNumber()==$lineSequence && $sku == $saleOrderLine->getSku()){
+    public function getLineSequence($lineSequence, $sku)
+    {
+        foreach($this->saleOrderLines as $saleOrderLine) {
+            if($saleOrderLine->getLineNumber()==$lineSequence && $sku == $saleOrderLine->getSku()) {
                 return $saleOrderLine;
             }
         }
@@ -178,6 +184,18 @@ class SaleOrder
     public function setShipmentNumber(?string $shipmentNumber): static
     {
         $this->shipmentNumber = $shipmentNumber;
+
+        return $this;
+    }
+
+    public function getInvoiceNumber(): ?string
+    {
+        return $this->invoiceNumber;
+    }
+
+    public function setInvoiceNumber(?string $invoiceNumber): static
+    {
+        $this->invoiceNumber = $invoiceNumber;
 
         return $this;
     }

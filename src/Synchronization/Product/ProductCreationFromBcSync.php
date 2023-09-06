@@ -8,23 +8,21 @@ use App\Entity\Product;
 use App\Mailer\SendEmail;
 use App\Synchronization\Product\ProductExportSync;
 use Doctrine\Persistence\ManagerRegistry;
-use League\Flysystem\FilesystemOperator;
+use Exception;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Config\Definition\Exception\Exception;
 
 class ProductCreationFromBcSync
 {
     
-    private $manager;
+    protected $manager;
 
     public function __construct(
-        private LoggerInterface $logger,
-        private ProductExportSync $productSync,
-        private KitPersonalizacionSportConnector $bcConnector,
-        private ManagerRegistry $managerRegistry,
-        private FilesystemOperator $defaultStorage,
-        private FilesystemOperator $bigBuyStorage,
-        private SendEmail $sendEmail,
+        protected LoggerInterface $logger,
+        protected ProductExportSync $productSync,
+        protected KitPersonalizacionSportConnector $bcConnector,
+        protected ManagerRegistry $managerRegistry,
+        protected PricesFromBcSync $pricesFromBcSync,
+        protected SendEmail $sendEmail,
     ) {
         $this->manager = $this->managerRegistry->getManager();
     }
@@ -33,14 +31,16 @@ class ProductCreationFromBcSync
     public function synchronize()
     {
         $products = $this->productSync->getProductsEnabledOnChannel();
-        $nbProductsCreated = 0;
+        $newSkus = [];
+
         foreach ($products as $product) {
             try {
 
                 $sku = $product['identifier'];
                 $itemBc = $this->bcConnector->getItemByNumber($sku);
                 if(!$itemBc) {
-                    $this->logger->error('Product do no exists in BC');
+                    throw new Exception('Product '.$sku.'do no exists in BC');
+
                 }
 
                 $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
@@ -48,7 +48,7 @@ class ProductCreationFromBcSync
                 if(!$productDb) {
                     $productDb=new Product();
                     $productDb->setSku($sku);
-                    $productDb->setNameErp($itemBc['displayName']);
+                    
                     $this->manager->persist($productDb);
 
                     $brandName = strtoupper($this->getAttributeSimple($product, 'brand'));
@@ -60,35 +60,57 @@ class ProductCreationFromBcSync
                         $this->manager->persist($brandDb);
                     }
                     $productDb->setBrand($brandDb);
+                    $this->addInfoFromBc($productDb, $itemBc);
                     $this->manager->flush();
+
+                    if($productDb->isEnabled()) {
+                        $newSkus[] = $itemBc;
+                    }
                 }
-
-                $productDb->setBundle($this->isBundle($itemBc));
-                $productDb->setPublicPrice($this->getRetailPrice($sku));
-                $productDb->setCanonDigital($this->getCanonDigitalForItem($itemBc));
-                $productDb->setVatCode($itemBc['vatProdPostingGroup']);
-                
-        
-                if($itemBc['itemStatus']=='Inactivo') {
-                    $productDb->setEnabled(false);
-                    $productDb->setActiveInBc(false);
-                } else {
-                    $productDb->setActiveInBc(true);
-                }
-
-                
-
                 
             } catch (Exception $e) {
                 $errors [] = $e->getMessage();
                 $this->logger->critical('Error '.$e->getMessage());
             }
-
              $this->manager->flush();
         }
+
+
+        if(count($newSkus)>0) {
+            $text= count($newSkus).' products has been added to BigBuy app. You nedd to define specific prices. You can edit on <a href="https://bigbuy.kps-group.com/">https://bigbuy.kps-group.com/</a><br/><br/>';
+            $text.='<table width="100%" cellpadding="0" cellspacing="0" style="min-width:100%;  border-collapse: collapse; border-style: solid; border-color: # aeabab;" border="1px">';
+            foreach($newSkus as $newSku) {
+                $text.='<tr><td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $newSku['number'].'</td>';
+                $text.='<td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $newSku['displayName'].'</td></tr>';
+            }
+            $text.='</table>';
+            $this->sendEmail->sendEmail(['eclos@kpsport.com', 'devops@kpsport.com'], 'New products on BigBuy', $text);
+        }
+
         $this->logger->info('---------------------------------------------------------------');
-        $this->logger->info('End synchro creation prices with '.$nbProductsCreated.' prices on app');
+        $this->logger->info('End synchro creation product with '.count($newSkus).' products on app');
         $this->logger->info('---------------------------------------------------------------');
+    }
+
+
+    protected function addInfoFromBc(Product $productDb, array $itemBc)
+    {
+        $productDb->setBundle($this->isBundle($itemBc));
+        $productDb->setPublicPrice($this->getRetailPrice($productDb->getSku()));
+        $productDb->setResellerPrice($this->getResellerPrice($productDb->getSku()));
+        $productDb->setCostPrice($itemBc['unitCost']);
+        $productDb->setCanonDigital($this->getCanonDigitalForItem($itemBc));
+        $productDb->setStockLaRoca($this->pricesFromBcSync->getFinalStockProductWarehouse($productDb->getSku(), $productDb->isBundle()));
+
+        $productDb->setVatCode($itemBc['vatProdPostingGroup']);
+        $productDb->setNameErp($itemBc['displayName']);
+            
+        if($itemBc['itemStatus']=='Inactivo') {
+            $productDb->setEnabled(false);
+            $productDb->setActiveInBc(false);
+        } else {
+            $productDb->setActiveInBc(true);
+        }
     }
 
 
@@ -151,6 +173,13 @@ class ProductCreationFromBcSync
     }
 
 
+    public function getResellerPrice($sku)
+    {
+        $itemPricesGroup = $this->bcConnector->getPricesSkuPerGroup($sku, 'PVD-ES');
+        return $this->getBestPrice($itemPricesGroup, true);
+    }
+
+
 
     public function getBestPrice($itemPrices, $calculateVat=false)
     {
@@ -170,7 +199,7 @@ class ProductCreationFromBcSync
             }
         }
 
-        return $bestPrice;
+        return $bestPrice ? round($bestPrice, 2) : null;
     }
 
 

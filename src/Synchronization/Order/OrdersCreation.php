@@ -17,7 +17,6 @@ use League\Csv\Writer;
 use League\Flysystem\FilesystemOperator;
 use League\Flysystem\StorageAttributes;
 use Psr\Log\LoggerInterface;
-use Twig\Environment;
 
 class OrdersCreation
 {
@@ -42,18 +41,18 @@ class OrdersCreation
     }
     
     public function synchronize()
-    {   
+    {
         $this->errors = [];
         $nbIntegrated = 0;
         $listFiles = $this->bigBuyStorage->listContents('/Orders', false);
-         /** @var \League\Flysystem\StorageAttributes $listFile */
+        /** @var \League\Flysystem\StorageAttributes $listFile */
         foreach($listFiles as $listFile) {
-            if($listFile->isFile()){
-               $nbIntegrated += (int)$this->integrateFile($listFile);
+            if($listFile->isFile()) {
+                $nbIntegrated += (int)$this->integrateFile($listFile);
             }
         }
 
-        if(count($this->errors)>0){
+        if(count($this->errors)>0) {
             $this->sendEmail->sendEmail(['devops@kpsport.com'], 'Order errors', implode('<br/>', $this->errors));
         }
 
@@ -65,100 +64,104 @@ class OrdersCreation
     {
         $this->logger->info('Integrate file >>>'.$listFile->path());
         
-        
+        $saleLinesArrayToIntegrate = [];
         $saleLinesArray = $this->extractContent($listFile->path());
         $this->logger->info('Sale lines in array  >>>'.count($saleLinesArray));
         $errorOrder=false;
-        foreach($saleLinesArray as $k => $saleLineArray){
+        foreach($saleLinesArray as $k => $saleLineArray) {
             $error = $this->checkLine($saleLineArray);
-            if($error){
+            if($error) {
                 $errorOrder = true;
                 $saleLinesArray[$k]['error'] = $error;
+            } else {
+                $saleLinesArrayToIntegrate[]=$saleLineArray;
             }
         }
-        if($errorOrder){
-           return $this->manageErrorOrders($listFile, $saleLinesArray);   
+        
+        try {
+            $dateRelease =  CalculatorNext::getNextDelivery(new DateTime('now'), $this->closingHours);
+                
+            $this->logger->info('Release date '. $dateRelease->format('Y-m-d H:i'));
+            $saleOrder = $this->getSaleOrder($dateRelease);
+            $saleOrderBc = $this->bcConnector->getSaleOrderByNumber($saleOrder->getOrderNumber());
+            foreach($saleLinesArrayToIntegrate as $k => $saleLineArray) {
+                $this->addSaleOrderLine($saleOrder, $saleOrderBc, $saleLineArray);
+            }
+        } catch (Exception $e) {
+            $this->sendEmail->sendAlert('Error', $e->getMessage());
+        }
+
+        if($errorOrder) {
+            $this->manageErrorOrders($listFile, $saleLinesArray);
         } else {
-            try {
-                $dateRelease =  CalculatorNext::getNextDelivery(new DateTime('now'), $this->closingHours);  ;
-                $this->logger->info('Release date '. $dateRelease->format('Y-m-d H:i'));
-                $saleOrder = $this->getSaleOrder($dateRelease);
-                $saleOrderBc = $this->bcConnector->getSaleOrderByNumber( $saleOrder->getOrderNumber());
-                foreach($saleLinesArray as $k => $saleLineArray){
-                    $this->addSaleOrderLine($saleOrder,$saleOrderBc, $saleLineArray);
-                }
-                $saleOrder->addLog('Copy locally file '.$listFile->path().'in success');
-                $this->defaultStorage->write(str_replace('Orders/', 'Orders/Success/', $listFile->path()), $this->bigBuyStorage->read($listFile->path()));
-                $saleOrder->addLog('Move on Big Buy file '.$listFile->path().'in Processed ');
-                $this->bigBuyStorage->move($listFile->path(), str_replace('Orders/', 'Orders/Processed/', $listFile->path()));
-            } catch (Exception $e){
-                $this->sendEmail->sendAlert('Error', $e->getMessage());
-            }
-            
-           
-            return true;
+            $saleOrder->addLog('Copy locally file '.$listFile->path().'in success');
+            $this->defaultStorage->write(str_replace('Orders/', 'Orders/Success/', $listFile->path()), $this->bigBuyStorage->read($listFile->path()));
+            $saleOrder->addLog('Move on Big Buy file '.$listFile->path().'in Processed ');
+            $this->bigBuyStorage->move($listFile->path(), str_replace('Orders/', 'Orders/Processed/', $listFile->path()));
         }
+        return count($saleLinesArrayToIntegrate)>0;
     }
 
 
     protected function addSaleOrderLine(SaleOrder $saleOrder, array $saleOrderBc, array $orderBigBuy)
     {
+        $priceBigBuy = floatval($orderBigBuy['price']);
+        $saleOrderLineBc = new SaleOrderLineBc();
+        $itemBc = $this->bcConnector->getItemByNumber($orderBigBuy['sku']);
+        $saleOrderLineBc->itemId = $itemBc['id'];
+        $saleOrderLineBc->quantity = (int)$orderBigBuy['quantity'];
+        $saleOrderLineBc->lineType = "Item";
+        $saleOrderLineBc->unitPrice =$priceBigBuy;
 
-            $saleOrderLineBc = new SaleOrderLineBc();
-            $itemBc = $this->bcConnector->getItemByNumber($orderBigBuy['sku']);
-            $saleOrderLineBc->itemId = $itemBc['id'];
-            $saleOrderLineBc->quantity = (int)$orderBigBuy['quantity'];
-            $saleOrderLineBc->lineType = "Item";
-            $product = $this->manager->getRepository(Product::class)->findOneBy(['sku'=>$orderBigBuy['sku']]);
-            $saleOrderLineBc->unitPrice = $product->getPrice();
-
-            $saleOrderLineBcCreated = $this->bcConnector->createSaleOrderLine($saleOrderBc['id'],  $saleOrderLineBc->transformToArray());
-            $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));
-
-
-            $reservation = [
-                "QuantityBase" => (int)$orderBigBuy['quantity'],
-                "CreationDate" => date('Y-m-d'),
-                "ItemNo" => $orderBigBuy['sku'],
-                "LocationCode" =>  $saleOrderBc['locationCode'],
-                "SourceID" => $saleOrder->getOrderNumber(),
-                "SourceRefNo"=> $saleOrderLineBcCreated['sequence'],
-            ];
-
-            $this->bcConnector->createReservation($reservation);
-            $saleOrder->addLog('Add reservation for line '.$saleOrderLineBcCreated['sequence'].' for '.$saleOrderLineBcCreated['quantity'].' '.$saleOrderLineBcCreated['lineDetails']['number']);
-
-            $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));    
+        $saleOrderLineBcCreated = $this->bcConnector->createSaleOrderLine($saleOrderBc['id'], $saleOrderLineBc->transformToArray());
+        $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));
 
 
-            $saleOrderLine = new SaleOrderLine();
-            $saleOrder->addSaleOrderLine($saleOrderLine);
-            $saleOrderLine->setQuantity($orderBigBuy['quantity']);
-            $saleOrderLine->setSku($orderBigBuy['sku']);
-            $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
-            $saleOrderLine->setPrice($product->getPrice());
-            $saleOrderLine->setBigBuyOrderLine($orderBigBuy['id']);
+        $reservation = [
+            "QuantityBase" => (int)$orderBigBuy['quantity'],
+            "CreationDate" => date('Y-m-d'),
+            "ItemNo" => $orderBigBuy['sku'],
+            "LocationCode" =>  $saleOrderBc['locationCode'],
+            "SourceID" => $saleOrder->getOrderNumber(),
+            "SourceRefNo"=> $saleOrderLineBcCreated['sequence'],
+        ];
+
+        $this->bcConnector->createReservation($reservation);
+        $saleOrder->addLog('Add reservation for line '.$saleOrderLineBcCreated['sequence'].' for '.$saleOrderLineBcCreated['quantity'].' '.$saleOrderLineBcCreated['lineDetails']['number']);
+
+        $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));
+
+
+        $saleOrderLine = new SaleOrderLine();
+        $saleOrder->addSaleOrderLine($saleOrderLine);
+        $saleOrderLine->setQuantity($orderBigBuy['quantity']);
+        $saleOrderLine->setSku($orderBigBuy['sku']);
+        $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
+        $saleOrderLine->setPrice($priceBigBuy);
+        $saleOrderLine->setBigBuyOrderLine($orderBigBuy['id']);
             
             
-            $this->manager->persist($saleOrderLine);
-            $this->manager->flush();
+        $this->manager->persist($saleOrderLine);
+        $this->manager->flush();
     }
 
 
     protected function getSaleOrder(DateTime $dateTime): SaleOrder
     {
         $saleOrder = $this->manager->getRepository(SaleOrder::class)->findOneBy(['releaseDateString'=>$dateTime->format('Y-m-d H:i')]);
-        if(!$saleOrder){
+        if(!$saleOrder) {
             $saleOrderBc = new SaleOrderBc();
             $saleOrderBc->customerNumber = self::CUSTOMER_NUMBER;
+            $saleOrderBc->shippingAgent = "DHL PARCEL";
+            $saleOrderBc->shippingAgentService = 'DHL1';
             $saleOrderBc->externalDocumentNumber ='RELEASE '.$dateTime->format('d-m-Y H:i');
-            $saleOrderBc->shipToName ='Big Buy';
-            $saleOrderBc->shippingPostalAddress->street ='Av. Paret del Patriarca, 15';
+            $saleOrderBc->shipToName =' ALL 4 BUSINESS, SL';
+            $saleOrderBc->shippingPostalAddress->street ='Carrer Quinsà, 12';
             $saleOrderBc->shippingPostalAddress->city ='Moncada';
             $saleOrderBc->shippingPostalAddress->postalCode ='46113';
             $saleOrderBc->shippingPostalAddress->countryLetterCode ='ES';
             $saleOrderBc->shippingPostalAddress->state ='Valencia';
-            
+           
             $saleOrderBcCreated = $this->bcConnector->createSaleOrder($saleOrderBc->transformToArray());
             
             $saleOrder = new SaleOrder();
@@ -175,17 +178,18 @@ class OrdersCreation
 
 
 
-    protected function manageErrorOrders(StorageAttributes $listFile,array $errors){
+    protected function manageErrorOrders(StorageAttributes $listFile, array $errors)
+    {
         $lines = [['order_id', 'sku', 'quantity','price', 'error']];
         $this->errors[] = 'Order '.$errors[0]['id'].' cannot be integrated in our system';
-        foreach($errors as $error){
+        foreach($errors as $error) {
             $line = [
                 $error['id'],
                 $error['sku'],
                 $error['quantity'],
                 $error['price'],
             ];
-            if(array_key_exists('error',  $error)){
+            if(array_key_exists('error', $error)) {
                 $this->errors[] ='For requested SKU '.$error['sku']. ' with qty '.$error['quantity'].' >>> error '.$error['error'];
                 $line[] = $error['error'];
             } else {
@@ -195,8 +199,8 @@ class OrdersCreation
         }
 
         $csv = Writer::createFromString();
-        $csv->insertAll($lines);
         $csv->setDelimiter(';');
+        $csv->insertAll($lines);
         $newName = str_replace('Orders/', 'Orders/Error/', $listFile->path());
         $this->bigBuyStorage->write($newName, $csv->toString());
         $this->defaultStorage->write($newName, $csv->toString());
@@ -211,10 +215,10 @@ class OrdersCreation
     protected function checkOrder(array $saleLinesArray)
     {
        
-        $errors = []; 
-        foreach($saleLinesArray as $k => $saleLineArray){
+        $errors = [];
+        foreach($saleLinesArray as $k => $saleLineArray) {
             $error = $this->checkLine($saleLineArray);
-            if($error){
+            if($error) {
                 $nvError = $saleLineArray;
                 $nvError['error'] = $error;
                 $errors[] = $nvError;
@@ -227,28 +231,28 @@ class OrdersCreation
 
     protected function checkLine(array $saleLine)
     {
-        // check if sku exists 
+        // check if sku exists
         $itemBc = $this->bcConnector->getItemByNumber($saleLine['sku']);
-        if(!$itemBc){
+        if(!$itemBc) {
             return 'SKU unknown '.$saleLine['sku'];
         }
 
         $product = $this->manager->getRepository(Product::class)->findOneBy(['sku'=>$saleLine['sku']]);
-        if(!$product){
+        if(!$product) {
             return 'Sku with no correlation '.$saleLine['sku'];
         }
 
-        if(!$product->getPrice()){
-            return 'Sku with no selling price '.$saleLine['sku'];
-        }
+        /* if(!$product->getPrice()) {
+             return 'Sku with no selling price '.$saleLine['sku'];
+         }*/
 
         // check availability
         $stockAvailability = $this->bcConnector->getStockAvailabilityPerProduct($saleLine['sku']);
-        if(!$stockAvailability){
+        if(!$stockAvailability) {
             return 'No stock '.$saleLine['sku'];
         }
 
-        if($stockAvailability['quantityAvailableLAROCA'] < $saleLine['quantity']){
+        if($stockAvailability['quantityAvailableLAROCA'] < $saleLine['quantity']) {
             return 'No enough stock '.$saleLine['sku'].' >> '.$stockAvailability['quantityAvailableLAROCA'].' available for '.$saleLine['quantity'].' requested' ;
         }
 

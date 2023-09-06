@@ -3,18 +3,12 @@
 namespace App\Synchronization\Order;
 
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
-use App\BusinessCentral\Model\SaleOrderBc;
-use App\BusinessCentral\Model\SaleOrderLineBc;
-use App\Entity\Product;
 use App\Entity\SaleOrder;
-use App\Entity\SaleOrderLine;
-use App\Helper\Utils\CalculatorNext;
 use App\Mailer\SendEmail;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Psr\Log\LoggerInterface;
-use Twig\Environment;
 
 class OrdersStatusSent
 {
@@ -42,7 +36,7 @@ class OrdersStatusSent
                 if(!$this->isSaleOrderSent($saleOrder->getOrderNumber())) {
                     $nbMinutesSinceRelease = $this->getMinutesDifference($saleOrder->getReleaseDate(), $datenow);
                     $this->logger->info('Sale order has been marked to be sent '.$nbMinutesSinceRelease.' minutes ago');
-                    if($nbMinutesSinceRelease > 720) { 
+                    if($nbMinutesSinceRelease > 720) {
                         $log = 'Sale order '.$saleOrder->getOrderNumber().' is not sent by warehouse. It should be received in Valencia '.$saleOrder->getArrivalTime()->format('d/m/Y H:i');
                         if($saleOrder->haveNoLogWithMessage($log)) {
                             $saleOrder->addLog($log, 'error');
@@ -55,9 +49,10 @@ class OrdersStatusSent
                     $saleOrder->setStatus(SaleOrder::STATUS_SENT_BY_WAREHOUSE);
                     $shipmentBc = $this->bcConnector->getSaleShipmentByOrderNumber($saleOrder->getOrderNumber());
                     $saleOrder->setShipmentNumber($shipmentBc['number']);
+                    
                 }
-            } catch (Exception $e){
-                $this->logger->critical( $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
+            } catch (Exception $e) {
+                $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
                 $this->sendEmail->sendAlert('Error OrdersStatusSent ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
             }
             $this->manager->flush();

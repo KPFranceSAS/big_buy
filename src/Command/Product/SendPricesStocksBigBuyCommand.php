@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Product;
 
-use App\Synchronization\Product\ProductExportSync;
+use App\Synchronization\Product\PricesFromBcSync;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 #[AsCommand(
-    name: 'app:sync-products-to-bigbuy',
-    description: 'Send a sync file for products',
+    name: 'app:send-prices-stocks-bigbuy',
+    description: 'Send a sync file for stock and price',
 )]
-class SyncProductsCommand extends Command
+class SendPricesStocksBigBuyCommand extends Command
 {
-    public function __construct(private ProductExportSync $productSync)
+    public function __construct(private PricesFromBcSync $productSync)
     {
         parent::__construct();
     }

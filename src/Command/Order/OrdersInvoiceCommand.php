@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Command;
+namespace App\Command\Order;
 
-use App\Synchronization\Order\OrdersStatusConfirmation;
-use App\Synchronization\Order\OrdersStatusRelease;
-use App\Synchronization\Order\OrdersStatusSent;
+use App\Synchronization\Order\OrdersStatusInvoice;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -12,16 +10,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 
 #[AsCommand(
-    name: 'app:confirmation-orders',
-    description: 'Check send orders confirmation',
+    name: 'app:orders-invoice',
+    description: 'Check send invoices',
 )]
-class ConfirmationOrdersCommand extends Command
+class OrdersInvoiceCommand extends Command
 {
 
     private $manager;
 
 
-    public function __construct(private OrdersStatusConfirmation $ordersStatusSent)
+    public function __construct(private OrdersStatusInvoice $ordersStatusSent)
     {
         parent::__construct();
     }

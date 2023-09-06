@@ -39,7 +39,7 @@ class ProductCrudController extends AdminCrudController
 
     public function getDefautOrder(): array
     {
-        return ['sku' => "ASC"];
+        return ["enabled"=>'ASC', 'sku' => "ASC"];
     }
 
 
@@ -64,9 +64,12 @@ class ProductCrudController extends AdminCrudController
             TextField::new('nameErp')->setDisabled(true),
             AssociationField::new('brand')->setDisabled(true)->setSortable(false),
             NumberField::new('canonDigital', 'Canon digital')->setDisabled(true),
+            NumberField::new('costPrice', 'Cost price')->setDisabled(true),
             NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true),
-            BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true),
+            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true),
+            NumberField::new('stockLaRoca', 'Stock')->setDisabled(true),
             NumberField::new('price'),
+            BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true),
             BooleanField::new('enabled')->renderAsSwitch(false),
             DateTimeField::new('updatedAt')->hideOnForm(),
         ];

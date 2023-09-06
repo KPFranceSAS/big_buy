@@ -6,10 +6,10 @@ use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Entity\Product;
 use App\Mailer\SendEmail;
 use Doctrine\Persistence\ManagerRegistry;
+use Exception;
 use League\Csv\Writer;
 use League\Flysystem\FilesystemOperator;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Config\Definition\Exception\Exception;
 
 class PricesFromBcSync
 {
