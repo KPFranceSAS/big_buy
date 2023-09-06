@@ -78,7 +78,7 @@ class PricesFromBcSync
         $this->logger->info('Start with '.$product->getSku());
        
 
-        if(!$product->getPrice()) {
+        if(!$product->getPrice()&& !$product->getResellerPrice()) {
             $this->logger->error('Product has no price');
             return null;
         }
@@ -87,7 +87,7 @@ class PricesFromBcSync
             'sku' => $product->getSku(),
             'specialVat' => $product->getVatCode()=='ESPECIAL' ? 1 : 0,
             'stock' => $this->getFinalStockProductWarehouse($product->getSku(), $product->isBundle()),
-            'priceBB' =>  $product->getPrice(),
+            'priceBB' =>  $product->getPrice() ? $product->getPrice() : $product->getResellerPrice(),
             'pricePublic' => $product->getPublicPrice(),
             'canonDigital' => $product->getCanonDigital()
         ];
