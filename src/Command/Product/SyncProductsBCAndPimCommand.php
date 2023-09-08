@@ -16,8 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 class SyncProductsBCAndPimCommand extends Command
 {
     public function __construct(
-        private ProductUpdateFromBcSync $productUpdateSync,
-        private ProductCreationFromBcSync $productCreateSync
+        private ProductUpdateFromBcSync $productUpdateSync
     ) {
         parent::__construct();
     }
@@ -25,7 +24,6 @@ class SyncProductsBCAndPimCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this->productUpdateSync->synchronize();
-        $this->productCreateSync->synchronize();
         return Command::SUCCESS;
     }
 }

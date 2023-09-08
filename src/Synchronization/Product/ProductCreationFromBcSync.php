@@ -32,7 +32,8 @@ class ProductCreationFromBcSync
 
 
 
-    protected function getProductsByBrand($brand){
+    protected function getProductsByBrand($brand)
+    {
         $searchBuilder = new SearchBuilder();
         $searchBuilder
             ->addFilter('brand', 'IN', [$brand])
@@ -48,7 +49,7 @@ class ProductCreationFromBcSync
         $brandEnableds= $this->manager->getRepository(Brand::class)->findByEnabled(true);
         $newSkus = [];
         
-        foreach($brandEnableds as $brandEnabled){
+        foreach($brandEnableds as $brandEnabled) {
 
             $this->logger->info('Get Products form '.$brandEnabled->getCode());
             $products= $this->getProductsByBrand($brandEnabled->getCode());
@@ -56,14 +57,17 @@ class ProductCreationFromBcSync
                 try {
     
                     $sku = $product['identifier'];
-                    $itemBc = $this->bcConnector->getItemByNumber($sku);
-                    if(!$itemBc) {
-                        throw new Exception('Product '.$sku.'do no exists in BC');
-                    }
+                   
     
                     $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
     
                     if(!$productDb) {
+
+                        $itemBc = $this->bcConnector->getItemByNumber($sku);
+                        if(!$itemBc) {
+                            throw new Exception('Product '.$sku.'do no exists in BC');
+                        }
+
                         $productDb=new Product();
                         $productDb->setSku($sku);
                         
