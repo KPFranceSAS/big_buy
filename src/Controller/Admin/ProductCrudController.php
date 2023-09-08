@@ -39,7 +39,7 @@ class ProductCrudController extends AdminCrudController
 
     public function getDefautOrder(): array
     {
-        return ["enabled"=>'ASC', 'sku' => "ASC"];
+        return ["enabled"=>'DESC', 'sku' => "ASC"];
     }
 
 
@@ -63,14 +63,14 @@ class ProductCrudController extends AdminCrudController
             TextField::new('sku')->setDisabled(true),
             TextField::new('nameErp')->setDisabled(true),
             AssociationField::new('brand')->setDisabled(true)->setSortable(false),
-            NumberField::new('canonDigital', 'Canon digital')->setDisabled(true),
-            NumberField::new('costPrice', 'Cost price')->setDisabled(true),
-            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true),
-            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true),
-            NumberField::new('stockLaRoca', 'Stock')->setDisabled(true),
-            NumberField::new('price'),
+            NumberField::new('canonDigital', 'Canon digital')->setDisabled(true)->setThousandsSeparator(''),
+            NumberField::new('costPrice', 'Cost price')->setDisabled(true)->setThousandsSeparator(''),
+            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator(''),
+            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator(''),
+            NumberField::new('stockLaRoca', 'Stock')->setDisabled(true)->setThousandsSeparator(''),
+            NumberField::new('price')->setDisabled(false)->setThousandsSeparator(''),
             BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true),
-            BooleanField::new('enabled')->renderAsSwitch(false),
+            BooleanField::new('enabled')->renderAsSwitch(false)->setDisabled(true),
             DateTimeField::new('updatedAt')->hideOnForm(),
         ];
     }
@@ -164,6 +164,7 @@ class ProductCrudController extends AdminCrudController
     protected function createWriter(FieldCollection $fields, string $filePath): Writer
     {
         $writer = WriterEntityFactory::createCSVWriter();
+        $writer->setFieldDelimiter(';');
         $writer->openToFile($filePath);
         $cellHeaders = [];
         foreach ($fields as $field) {
@@ -194,7 +195,7 @@ class ProductCrudController extends AdminCrudController
         ->linkToCrudAction('reactivate')
         ->setIcon('fas fa-toggle-on')
         ->displayIf(static function ($entity) {
-            return $entity->isEnabled()==false && $entity->getBcItemStatus();
+            return $entity->isEnabled()==false && $entity->isActiveInBc() && $entity->getBrand()->isEnabled();
         });
 
         $actionReactivateList = clone($actionReactivate);
@@ -225,6 +226,7 @@ class ProductCrudController extends AdminCrudController
                 return $action->setIcon('fa fa-pencil')->setLabel("Edit");
             })
             ->add(Crud::PAGE_INDEX, $actionDesactivateList)
+            ->add(Crud::PAGE_INDEX, $actionReactivateList)
             ->addBatchAction(
                 Action::new('desactivateBatch', 'Disable')
                 ->linkToCrudAction('desactivateBatch')
@@ -260,13 +262,13 @@ class ProductCrudController extends AdminCrudController
     {
         $product = $context->getEntity()->getInstance();
         $manager = $this->container->get('doctrine')->getManager();
-        if($product->isActiveInBc()) {
+        if($product->isActiveInBc() && $product->getBrand()->isEnabled()) {
             $product->addLog('Product enabled');
             $product->setEnabled(true);
             $manager->flush();
             $this->addFlash('success', 'Product has been enabled');
         } else {
-            $this->addFlash('success', 'Product cannot be enabled cause it is disabled in Business Central');
+            $this->addFlash('success', 'Product cannot be enabled');
         }
         
         return $this->redirect($context->getReferrer());
@@ -281,7 +283,7 @@ class ProductCrudController extends AdminCrudController
         $entityManager = $this->container->get('doctrine')->getManagerForClass(Product::class);
         foreach ($batchActionDto->getEntityIds() as $id) {
             $product = $entityManager->find(Product::class, $id);
-            if($product->isActiveInBc()) {
+            if($product->isActiveInBc() && $product->getBrand()->isEnabled()) {
                 $product->addLog('Product enabled');
                 $product->setEnabled(true);
             }

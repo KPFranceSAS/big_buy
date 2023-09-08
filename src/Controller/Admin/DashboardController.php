@@ -2,14 +2,11 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\AccountRequest;
-use App\Entity\Customer;
+use App\Entity\Brand;
 use App\Entity\ImportPricing;
-use App\Entity\MagentoRequest;
 use App\Entity\Product;
 use App\Entity\SaleOrder;
 use App\Entity\User;
-use App\Entity\WebOrder;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
@@ -32,9 +29,10 @@ class DashboardController extends AbstractDashboardController
 
     public function configureMenuItems(): iterable
     {
-        yield MenuItem::linkToCrud('Order', 'fas fa-shopping-cart', SaleOrder::class);
+        yield MenuItem::linkToCrud('Brand', 'far fa-copyright', Brand::class);
         yield MenuItem::linkToCrud('Product', 'fas fa-barcode', Product::class);
         yield MenuItem::linkToCrud('Import', 'fas fa-upload', ImportPricing::class);
+        yield MenuItem::linkToCrud('Order', 'fas fa-shopping-cart', SaleOrder::class);
         yield MenuItem::linkToCrud('User', 'fa fa-user', User::class);
     }
 }

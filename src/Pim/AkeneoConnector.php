@@ -52,6 +52,12 @@ class AkeneoConnector
         return $this->client->getAttributeOptionApi()->get($attributeCode, $code);
     }
 
+
+    public function getAllOptionsAttribute($attributeCode)
+    {
+        return $this->client->getAttributeOptionApi()->all($attributeCode);
+    }
+
     
     public function getProductModel($productModel)
     {

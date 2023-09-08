@@ -29,6 +29,12 @@ class Brand
     #[ORM\OneToMany(mappedBy: 'brand', targetEntity: Product::class)]
     private Collection $products;
 
+    #[ORM\Column(length: 255)]
+    private ?string $code = null;
+
+    #[ORM\Column]
+    private ?bool $enabled = null;
+
     public function __construct()
     {
         $this->products = new ArrayCollection();
@@ -83,6 +89,30 @@ class Brand
                 $product->setBrand(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(string $code): static
+    {
+        $this->code = $code;
+
+        return $this;
+    }
+
+    public function isEnabled(): ?bool
+    {
+        return $this->enabled;
+    }
+
+    public function setEnabled(bool $enabled): static
+    {
+        $this->enabled = $enabled;
 
         return $this;
     }

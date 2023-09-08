@@ -2,10 +2,12 @@
 
 namespace App\Synchronization\Product;
 
+use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Entity\Brand;
 use App\Entity\Product;
 use App\Mailer\SendEmail;
+use App\Pim\AkeneoConnector;
 use App\Synchronization\Product\ProductExportSync;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
@@ -19,6 +21,7 @@ class ProductCreationFromBcSync
     public function __construct(
         protected LoggerInterface $logger,
         protected ProductExportSync $productSync,
+        protected AkeneoConnector $akeneoConnector,
         protected KitPersonalizacionSportConnector $bcConnector,
         protected ManagerRegistry $managerRegistry,
         protected PricesFromBcSync $pricesFromBcSync,
@@ -27,53 +30,61 @@ class ProductCreationFromBcSync
         $this->manager = $this->managerRegistry->getManager();
     }
 
+
+
+    protected function getProductsByBrand($brand){
+        $searchBuilder = new SearchBuilder();
+        $searchBuilder
+            ->addFilter('brand', 'IN', [$brand])
+            ->addFilter('enabled', '=', true);
+
+        return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
+    }
+
     
     public function synchronize()
     {
-        $products = $this->productSync->getProductsEnabledOnChannel();
+       
+        $brandEnableds= $this->manager->getRepository(Brand::class)->findByEnabled(true);
         $newSkus = [];
+        
+        foreach($brandEnableds as $brandEnabled){
 
-        foreach ($products as $product) {
-            try {
-
-                $sku = $product['identifier'];
-                $itemBc = $this->bcConnector->getItemByNumber($sku);
-                if(!$itemBc) {
-                    throw new Exception('Product '.$sku.'do no exists in BC');
-
-                }
-
-                $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
-
-                if(!$productDb) {
-                    $productDb=new Product();
-                    $productDb->setSku($sku);
+            $this->logger->info('Get Products form '.$brandEnabled->getCode());
+            $products= $this->getProductsByBrand($brandEnabled->getCode());
+            foreach ($products as $product) {
+                try {
+    
+                    $sku = $product['identifier'];
+                    $itemBc = $this->bcConnector->getItemByNumber($sku);
+                    if(!$itemBc) {
+                        throw new Exception('Product '.$sku.'do no exists in BC');
+                    }
+    
+                    $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
+    
+                    if(!$productDb) {
+                        $productDb=new Product();
+                        $productDb->setSku($sku);
+                        
+                        $this->manager->persist($productDb);
+                        $productDb->setBrand($brandEnabled);
+                        $this->addInfoFromBc($productDb, $itemBc);
+                        $this->manager->flush();
+    
+                        if($productDb->isEnabled()) {
+                            $newSkus[] = $itemBc;
+                        }
+                    }
                     
-                    $this->manager->persist($productDb);
-
-                    $brandName = strtoupper($this->getAttributeSimple($product, 'brand'));
-
-                    $brandDb = $this->manager->getRepository(Brand::class)->findOneByName($brandName);
-                    if(!$brandDb) {
-                        $brandDb=new Brand();
-                        $brandDb->setName($brandName);
-                        $this->manager->persist($brandDb);
-                    }
-                    $productDb->setBrand($brandDb);
-                    $this->addInfoFromBc($productDb, $itemBc);
-                    $this->manager->flush();
-
-                    if($productDb->isEnabled()) {
-                        $newSkus[] = $itemBc;
-                    }
+                } catch (Exception $e) {
+                    $errors [] = $e->getMessage();
+                    $this->logger->critical('Error '.$e->getMessage());
                 }
-                
-            } catch (Exception $e) {
-                $errors [] = $e->getMessage();
-                $this->logger->critical('Error '.$e->getMessage());
+                 $this->manager->flush();
             }
-             $this->manager->flush();
         }
+        
 
 
         if(count($newSkus)>0) {

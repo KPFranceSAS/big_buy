@@ -18,15 +18,11 @@ class ProductUpdateFromBcSync extends ProductCreationFromBcSync
         foreach ($products as $product) {
             try {
                 $itemBc = $this->bcConnector->getItemByNumber($product->getSku());
-                $this->addInfoFromBc($product, $itemBc);
-
-                
+                $this->addInfoFromBc($product, $itemBc);   
             } catch (Exception $e) {
                 $errors [] = $e->getMessage();
                 $this->logger->critical('Error '.$e->getMessage());
             }
-
-            
         }
         $this->manager->flush();
         $this->logger->info('---------------------------------------------------------------');

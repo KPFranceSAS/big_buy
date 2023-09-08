@@ -4,6 +4,7 @@ namespace App\Synchronization\Product;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
+use App\Entity\Brand;
 use App\Entity\Product;
 use App\Mailer\SendEmail;
 use App\Pim\AkeneoConnector;
@@ -32,18 +33,20 @@ class ProductExportSync
     
     public function synchronize()
     {
-        /** @var  array $products */
-        $products = $this->getProductsEnabledOnChannel();
         $productToArrays=[];
-        foreach ($products as $product) {
-            $productDb = $this->manager->getRepository(Product::class)->findOneBySku($product['identifier']);
+        $brandEnableds= $this->manager->getRepository(Brand::class)->findByEnabled(true);
+        foreach($brandEnableds as $brandEnabled) {
 
-            if($productDb && $productDb->isEnabled()) {
-                $productToArray = $this->flatProduct($product);
-                $productToArrays[]= $productToArray;
+            $this->logger->info('Get Products form '.$brandEnabled->getCode());
+            $products= $this->getProductsByBrand($brandEnabled->getCode());
+            foreach ($products as $product) {
+                $productDb = $this->manager->getRepository(Product::class)->findOneBySku($product['identifier']);
+
+                if($productDb && $productDb->isEnabled()) {
+                    $productToArray = $this->flatProduct($product);
+                    $productToArrays[]= $productToArray;
+                }
             }
-
-            
         }
         $this->sendProducts($productToArrays);
     }
@@ -273,7 +276,15 @@ class ProductExportSync
     }
 
     
+    protected function getProductsByBrand($brand)
+    {
+        $searchBuilder = new SearchBuilder();
+        $searchBuilder
+            ->addFilter('brand', 'IN', [$brand])
+            ->addFilter('enabled', '=', true);
 
+        return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
+    }
 
 
     public function getProductsEnabledOnChannel()

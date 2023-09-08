@@ -88,7 +88,7 @@ class ImportPricingCrudController extends AdminCrudController
         $lines = [
                 ['sku', 'price'],
                 ['XXX-SKU', '125'],
-                ['XXX-SKU-2', '135.25']
+                ['XXX-SKU-2', '135,25']
         ];
 
         
@@ -96,7 +96,7 @@ class ImportPricingCrudController extends AdminCrudController
 
         $h = fopen('php://output', 'r');
         $writer->openToBrowser($fileName);
-        foreach($lines as $line){
+        foreach($lines as $line) {
             $singleRow = WriterEntityFactory::createRowFromArray($line);
             $writer->addRow($singleRow);
         }
@@ -158,7 +158,7 @@ class ImportPricingCrudController extends AdminCrudController
             if ($btnToImport->isClicked()) {
                 $nextAction = ImportPricing::Status_ToImport;
                 $import->addLog('Content confirmed by ' . $user->getUserIdentifier());
-                $this->importPrices( $import);
+                $this->importPrices($import);
 
                 $this->addFlash('success', 'Your import has been done.');
 
@@ -209,7 +209,7 @@ class ImportPricingCrudController extends AdminCrudController
     public function addError(ImportPricing $importPricing, $log)
     {
         $importPricing->addError($log);
-    }   
+    }
 
 
     private function importPrices(ImportPricing $importPricing)
@@ -266,7 +266,7 @@ class ImportPricingCrudController extends AdminCrudController
 
         $priceFormatted = floatval(str_replace(',', '.', $line["price"]));
 
-        if($priceFormatted<=0){
+        if($priceFormatted<=0) {
             $this->addError($importPricing, 'Price '.$priceFormatted .'is not correct on  line '.$lineNumber);
             return false;
         }
@@ -319,4 +319,3 @@ class ImportPricingCrudController extends AdminCrudController
         }
     }
 }
-
