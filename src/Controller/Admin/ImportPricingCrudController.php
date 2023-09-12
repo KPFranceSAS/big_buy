@@ -215,7 +215,7 @@ class ImportPricingCrudController extends AdminCrudController
 
     private function importPrices(ImportPricing $importPricing,ValidatorInterface $validator)
     {
-        $i = 1;
+        $i = 2;
         $created = 0;
         $notCreated = 0;
         $contentLines = $importPricing->getContent();

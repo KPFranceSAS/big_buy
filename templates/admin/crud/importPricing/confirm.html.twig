@@ -20,7 +20,7 @@
 			<tbody>
 				{% for contentLine in import.getContent %}
 					<tr>
-						<td data-label="Line #" class="text-left field-text">{{loop.index}}</td>
+						<td data-label="Line #" class="text-left field-text">{{loop.index + 1}}</td>
 						{% for label, value in contentLine %}
 							<td data-label="{{label}}" class="text-left field-text">{{value}}</td>
 						{% endfor %}
