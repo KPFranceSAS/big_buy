@@ -21,6 +21,7 @@ use function Symfony\Component\String\u;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class ImportPricingCrudController extends AdminCrudController
 {
@@ -86,7 +87,7 @@ class ImportPricingCrudController extends AdminCrudController
         }
 
         $lines = [
-                ['sku', 'price'],
+                ['Sku', 'Price'],
                 ['XXX-SKU', '125'],
                 ['XXX-SKU-2', '135,25']
         ];
@@ -141,7 +142,7 @@ class ImportPricingCrudController extends AdminCrudController
    
 
 
-    public function confirm(AdminContext $context)
+    public function confirm(AdminContext $context,  ValidatorInterface $validator)
     {
         $import = $context->getEntity()->getInstance();
         if ($import->getStatus() != ImportPricing::Status_Created) {
@@ -158,7 +159,7 @@ class ImportPricingCrudController extends AdminCrudController
             if ($btnToImport->isClicked()) {
                 $nextAction = ImportPricing::Status_ToImport;
                 $import->addLog('Content confirmed by ' . $user->getUserIdentifier());
-                $this->importPrices($import);
+                $this->importPrices($import, $validator);
 
                 $this->addFlash('success', 'Your import has been done.');
 
@@ -212,7 +213,7 @@ class ImportPricingCrudController extends AdminCrudController
     }
 
 
-    private function importPrices(ImportPricing $importPricing)
+    private function importPrices(ImportPricing $importPricing,ValidatorInterface $validator)
     {
         $i = 1;
         $created = 0;
@@ -221,7 +222,7 @@ class ImportPricingCrudController extends AdminCrudController
         foreach ($contentLines as $contentLine) {
             $this->addLog($importPricing, '######################################################');
             $this->addLog($importPricing, 'Processing line ' . $i);
-            $importLineOk = $this->importLinePricing($importPricing, $contentLine, $i);
+            $importLineOk = $this->importLinePricing($importPricing, $contentLine, $i, $validator);
           
 
             if ($importLineOk) {
@@ -243,35 +244,44 @@ class ImportPricingCrudController extends AdminCrudController
     }
 
 
-    private function importLinePricing(ImportPricing $importPricing, array $line, int $lineNumber)
+    private function importLinePricing(ImportPricing $importPricing, array $line, int $lineNumber, ValidatorInterface $validator)
     {
-        if (!array_key_exists('sku', $line)) {
+        if (!array_key_exists('Sku', $line)) {
             $this->addError($importPricing, 'Column Sku is required');
             return false;
         }
 
-        if (!array_key_exists('price', $line)) {
+        if (!array_key_exists('Price', $line)) {
             $this->addError($importPricing, 'Column price is required');
             return false;
         }
 
-        $productDb =  $this->container->get('doctrine')->getManager()->getRepository(Product::class)->findOneBySku(trim($line["sku"]));
+        $productDb =  $this->container->get('doctrine')->getManager()->getRepository(Product::class)->findOneBySku(trim($line["Sku"]));
         if (!$productDb) {
-            $this->addError($importPricing, 'No product with sku ' . $line["sku"]. ' on line '.$lineNumber);
+            $this->addError($importPricing, 'No product with sku ' . $line["Sku"]. ' on line '.$lineNumber);
             return false;
         } else {
-            $this->addLog($importPricing, 'Find product with' . $line["sku"]. ' on line '.$lineNumber);
+            $this->addLog($importPricing, 'Find product with' . $line["Sku"]. ' on line '.$lineNumber);
         }
 
 
-        $priceFormatted = floatval(str_replace(',', '.', $line["price"]));
+        $priceFormatted = floatval(str_replace(',', '.', $line["Price"]));
 
         if($priceFormatted<=0) {
             $this->addError($importPricing, 'Price '.$priceFormatted .'is not correct on  line '.$lineNumber);
             return false;
         }
 
-        $productDb->setPrice(floatval(str_replace(',', '.', $line["price"])));
+        $productDb->setPrice(floatval(str_replace(',', '.', $line["Price"])));
+
+        $errors = $validator->validate($productDb);
+        if (count($errors) > 0) {
+            foreach ($errors as $error) {
+                $this->addError($importPricing, 'The product '.$line["Sku"].' has some issues on ' . $error->getPropertyPath() . ' > ' . $error->getMessage() . ' on line ' . $lineNumber);
+            }
+            $this->container->get('doctrine')->getManager()->detach($productDb);
+            return false;
+        }
         return true;
     }
 

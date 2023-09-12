@@ -1,0 +1,71 @@
+{% extends '@!EasyAdmin/crud/edit.html.twig' %}
+
+
+{% block content_header %}
+	<div class="content-header-title">
+		<h1 class="title">
+			{% block content_title %}
+				{{parent()}}
+			{% endblock %}
+
+			{% block content_help %}
+				{% if has_help_message %}
+					<a tabindex="0" class="content-header-help" data-bs-toggle="popover" data-bs-custom-class="ea-content-help-popover" data-bs-animation="true" data-bs-html="true" data-bs-placement="bottom" data-bs-trigger="focus" data-bs-content="{{ ea.crud.helpMessage|trans|e('html_attr') }}">
+						<i class="far fa-question-circle"></i>
+					</a>
+				{% endif %}
+			{% endblock %}
+            {% if logs is defined %}
+			<button type="button" class="btn btn-secondary btn-xs" data-bs-toggle="modal" data-bs-target="#logDisplay">
+				<i class="fas fa-history"></i>
+			</button>
+
+			<div class="modal fade" tabindex="-1" id="logDisplay" data-bs-backdrop="static"  aria-labelledby="logDisplay" aria-hidden="true">
+				<div class="modal-dialog modal-fullscreen  modal-dialog-scrollable">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Logs</h5>
+							<button type="button" class="btn-close " data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="">
+								<table class="table">
+									{% for log in logs %}
+										<tr>
+											<td>{{log.loggedAt|date('d-m-Y H:i:s')}}</td>
+											<td>{{log.action}}</td>
+											<td>{{log.username ? log.username :  'System'}}</td>
+											<td>
+												{% for key, data in log.data%}
+													{{key}}
+													:
+													{% if data is iterable %}
+														{{data|json_encode}}
+													{% else %}
+														{{data }}
+													{% endif %}<br/>
+												{% endfor %}
+											</td>
+											<td>{{log.version}}</td>
+										</tr>
+									{% endfor %}
+								</table>
+							</div>
+
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		{% endif %}
+		</h1>
+		{% block subtitle %}
+		{% endblock %}
+	</div>
+
+	{% block page_actions_wrapper %}
+		{{parent()}}
+	{% endblock %}
+{% endblock content_header %}

@@ -8,9 +8,11 @@ use App\Repository\BrandRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 
 #[ORM\Entity(repositoryClass: BrandRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[Gedmo\Loggable]
 class Brand
 {
 
@@ -33,6 +35,7 @@ class Brand
     private ?string $code = null;
 
     #[ORM\Column]
+    #[Gedmo\Versioned]
     private ?bool $enabled = null;
 
     public function __construct()

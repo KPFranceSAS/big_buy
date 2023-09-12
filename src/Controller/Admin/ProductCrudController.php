@@ -20,6 +20,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Factory\FilterFactory;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -59,18 +60,25 @@ class ProductCrudController extends AdminCrudController
     public function configureFields(string $pageName): iterable
     {
         return [
+            FormField::addPanel('Product')
+                ->setIcon('fas fa-barcode'),
+            TextField::new('sku')->setDisabled(true)->setColumns(4),
+            TextField::new('nameErp')->setDisabled(true)->setColumns(4),
+            AssociationField::new('brand')->setDisabled(true)->setSortable(false)->setColumns(4),
+            NumberField::new('stockLaRoca', 'Stock')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true)->setColumns(4),
             
-            TextField::new('sku')->setDisabled(true),
-            TextField::new('nameErp')->setDisabled(true),
-            AssociationField::new('brand')->setDisabled(true)->setSortable(false),
-            NumberField::new('canonDigital', 'Canon digital')->setDisabled(true)->setThousandsSeparator(''),
-            NumberField::new('costPrice', 'Cost price')->setDisabled(true)->setThousandsSeparator(''),
-            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator(''),
-            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator(''),
-            NumberField::new('stockLaRoca', 'Stock')->setDisabled(true)->setThousandsSeparator(''),
-            NumberField::new('price')->setDisabled(false)->setThousandsSeparator(''),
-            BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true),
-            BooleanField::new('enabled')->renderAsSwitch(false)->setDisabled(true),
+            FormField::addPanel('Common Price')
+                ->setIcon('fas fa-money-bill'),
+            NumberField::new('costPrice', 'Cost price')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            FormField::addPanel('Big Buy Price')->setIcon('fas fa-money-bill-alt'),
+            NumberField::new('price')->setDisabled(false)->setThousandsSeparator('')->setColumns(4),
+            BooleanField::new('forcePrice')->renderAsSwitch(false)->setColumns(4),
+            NumberField::new('finalPriceBigBuy')->hideOnForm(),
+            BooleanField::new('enabled')->renderAsSwitch(false)->setDisabled(true)->hideOnForm(),
+            
             DateTimeField::new('updatedAt')->hideOnForm(),
         ];
     }

@@ -6,10 +6,14 @@ use App\Helper\Traits\TraitLoggable;
 use App\Helper\Traits\TraitTimeUpdated;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
 #[UniqueEntity("sku")]
+#[Gedmo\Loggable]
 #[ORM\HasLifecycleCallbacks]
 class Product
 {
@@ -30,9 +34,11 @@ class Product
     private ?string $nameErp = null;
 
     #[ORM\Column(nullable: true)]
+    #[Gedmo\Versioned]
     private ?float $price = null;
 
     #[ORM\Column]
+    #[Gedmo\Versioned]
     private ?bool $enabled = true;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
@@ -55,6 +61,7 @@ class Product
     private ?bool $activeInBc = false;
 
     #[ORM\Column(nullable: true)]
+    #[Gedmo\Versioned]
     private ?float $resellerPrice = null;
 
     #[ORM\Column(nullable: true)]
@@ -63,10 +70,41 @@ class Product
     #[ORM\Column(nullable: true)]
     private ?int $stockLaRoca = null;
 
+    #[ORM\Column(nullable: true)]
+    #[Gedmo\Versioned]
+    private ?bool $forcePrice = false;
+
     public function getId(): ?int
     {
         return $this->id;
     }
+
+
+
+
+    #[Assert\Callback]
+    public function validate(ExecutionContextInterface $context, $payload)
+    {
+        if($this->price && $this->price < $this->costPrice && $this->forcePrice == false) {
+            $context->buildViolation('If you want to sell with a price lower than cost price, you have to mark price as forced in product page')
+                ->atPath('price')
+                ->addViolation();
+        }
+    }
+
+
+
+    public function getFinalPriceBigBuy(): ?string
+    {
+        if($this->price) {
+            if(($this->costPrice > $this->price && $this->forcePrice)|| ($this->costPrice < $this->price)) {
+                return $this->price;
+            }
+        }
+        return $this->resellerPrice;
+    }
+
+
 
     public function getSku(): ?string
     {
@@ -220,6 +258,18 @@ class Product
     public function setStockLaRoca(?int $stockLaRoca): static
     {
         $this->stockLaRoca = $stockLaRoca;
+
+        return $this;
+    }
+
+    public function isForcePrice(): ?bool
+    {
+        return $this->forcePrice;
+    }
+
+    public function setForcePrice(?bool $forcePrice): static
+    {
+        $this->forcePrice = $forcePrice;
 
         return $this;
     }

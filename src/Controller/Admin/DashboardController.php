@@ -7,6 +7,7 @@ use App\Entity\ImportPricing;
 use App\Entity\Product;
 use App\Entity\SaleOrder;
 use App\Entity\User;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController;
@@ -25,6 +26,11 @@ class DashboardController extends AbstractDashboardController
     {
         return Dashboard::new()
             ->setTitle('Big Buy');
+    }
+
+    public function configureAssets(): Assets
+    {
+        return Assets::new()->addCssFile('build/app.css')->addWebpackEncoreEntry('app');
     }
 
     public function configureMenuItems(): iterable

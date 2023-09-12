@@ -1,3 +1,60 @@
-body {
-    background-color: lightgray;
+/* public/css/admin.css */
+:root {
+    --body-max-width: 100%;
+    --font-size-base: 12px;
+
+    --sidebar-bg: #000;
+    --sidebar-logo-color: #fff;
+    --sidebar-menu-color: #fff;
+    --sidebar-menu-icon-color: #fff;
+    --sidebar-menu-submenu-color: #fff;
+    --responsive-header-logo-color: #fff;
+    --responsive-header-bg: #000;
+    --responsive-table-label-color: #000;
+}
+
+
+
+.modal-backdrop {
+     z-index: 0;
+  }
+
+  .modal-body table {
+    font-size: var(--font-size-base);
+    font-weight:normal;
+  }
+
+#navigation-toggler {
+    color: #fff;
+    filter: none;
+}
+
+.responsive-header .user-menu-wrapper a.user-details,
+.responsive-header .user-menu-wrapper a.user-details:hover {
+    color: #fff;
+}
+
+.tfoot-col-label {
+    text-align: right;
+}
+
+
+
+@media (min-width: 992px) {
+
+    body.ea-sidebar-width-compact #main-menu .menu .menu-item:hover .submenu,
+    body.ea-sidebar-width-compact #main-menu .menu .menu-item:hover .menu-item-contents,
+    body.ea-sidebar-width-compact #main-menu .menu .menu-item:hover {
+        background: var(--sidebar-bg);
+    }
+}
+
+@media (max-width: 992px) {
+    table.datagrid:not(.datagrid-empty) tr {
+        margin-bottom: 10px;
+    }
+
+    .tfoot-col-label {
+        display: none !important;
+    }
 }

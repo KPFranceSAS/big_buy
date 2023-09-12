@@ -33,12 +33,12 @@ abstract class AdminCrudController extends AbstractCrudController
             ->setDateTimeFormat('dd-MM-yyyy HH:mm')
             ->setDefaultSort($this->getDefautOrder())
             ->setPaginatorPageSize(100)
-            ->showEntityActionsInlined(false);
+            ->showEntityActionsInlined(true);
     }
     public function configureActions(Actions $actions): Actions
     {
         return $actions
-            ->add('index', Action::new(Action::DETAIL)->linkToCrudAction(Action::DETAIL)->setLabel(false)->setIcon('fa fa-eye'))
+            ->add('index', Action::new(Action::DETAIL)->linkToCrudAction(Action::DETAIL)->setIcon('fa fa-eye'))
             ->disable(Action::EDIT)
             ->disable(Action::NEW)
             ->disable(Action::DELETE);

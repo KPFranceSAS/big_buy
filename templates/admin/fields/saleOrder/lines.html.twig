@@ -1,0 +1,31 @@
+ <div>
+        {% if field.value|length > 0 %}
+        <table class="table datagrid  ">
+            <thead>
+                <tr>
+                    <th>Sequence Line</th>
+                    <th>Sku</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Big Buy order id</th>
+                    <th>Created at</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for saleLine in field.value %}
+                    <tr>
+                    	<td data-label="Sequence Line" class="text-left field-text">{{saleLine.lineNumber}}</td>
+                        <td data-label="Sku" class="text-left field-text">{{saleLine.sku}}</td>
+                        <td data-label="Quantity" class="text-left field-text">{{saleLine.quantity}}</td>
+                        <td data-label="Price" class="text-left field-text">{{saleLine.price}}</td>
+                        <td data-label="Big Buy order id" class="text-left field-text">{{saleLine.bigBuyOrderLine}}</td>
+                        <td data-label="Created at" class="text-left field-text">{{saleLine.createdAt|date('Y-m-d H:i')}}</td>
+                    </tr>
+                {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+        {% else %}
+        <div class="alert alert-info ">No lines</div>
+        {% endif %}
+    </div>

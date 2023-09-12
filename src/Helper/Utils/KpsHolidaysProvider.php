@@ -33,16 +33,16 @@ class KpsHolidaysProvider implements HolidayProviderInterface
         $holidays->add($this->getNewYear($year)); // 01/01
         $holidays->add($this->getEpiphany($year)); // 06/01
         
-        $holidays->add($this->getGoodFriday($year)); // Easet friday
+        $holidays->add($this->getGoodFriday($year)); // Easter friday
         $holidays->add($this->getEasterMonday($year)); // Easter monday
         $holidays->add($this->getLaborDay($year));  // 01/05
         $holidays->add($this->getSaintJamesDay($year)); // 24/06
-        
         $holidays->add($this->getAssumptionDay($year)); // 15/08
+        $holidays->add($this->getCatalognIndependanceDay($year)); // 11/09
         $holidays->add($this->getSpanishNationalDay($year)); // 12/10
         $holidays->add($this->getAllSaintsDay($year)); // 01/11
         $holidays->add($this->getSpanishConstitutionDay($year)); // 06/12
-        $holidays->add($this->getValenciaSpanishConstitutionDay($year)); // 06/12
+        $holidays->add($this->getValenciaSpanishConstitutionDay($year)); // 08/12
         $holidays->add($this->getChristmasDay($year)); //25/12
         $holidays->add($this->getSaintEstebanDay($year)); //26/12
 
@@ -70,6 +70,11 @@ class KpsHolidaysProvider implements HolidayProviderInterface
     private function getSpanishConstitutionDay(int $year, int $additionalType = HolidayType::OTHER): Holiday
     {
         return Holiday::create(HolidayName::CONSTITUTION_DAY, "{$year}-12-06", HolidayType::OFFICIAL | $additionalType);
+    }
+
+    private function getCatalognIndependanceDay(int $year, int $additionalType = HolidayType::OTHER): Holiday
+    {
+        return Holiday::create(HolidayName::CONSTITUTION_DAY, "{$year}-09-11", HolidayType::OFFICIAL | $additionalType);
     }
 
     private function getValenciaSpanishConstitutionDay(int $year, int $additionalType = HolidayType::OTHER): Holiday
