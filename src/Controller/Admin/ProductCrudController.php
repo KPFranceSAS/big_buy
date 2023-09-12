@@ -51,7 +51,7 @@ class ProductCrudController extends AdminCrudController
             ->add('price')
             ->add('enabled')
             ->add('activeInBc')
-            ->add('stock')
+            ->add('stockLaRoca')
             ->add('brand')
             ->add('forcePrice')
         ;
