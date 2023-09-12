@@ -86,7 +86,7 @@ class Product
     public function validate(ExecutionContextInterface $context, $payload)
     {
         if($this->price && $this->price < $this->costPrice && $this->forcePrice == false) {
-            $context->buildViolation('If you want to sell with a price lower than cost price, you have to mark price as forced in product page')
+            $context->buildViolation('If you want to sell with a price ('.$this->price.' €) lower than cost price ('.$this->costPrice.' €), you have to mark price as forced in product page')
                 ->atPath('price')
                 ->addViolation();
         }
