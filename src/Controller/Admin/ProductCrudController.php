@@ -51,7 +51,9 @@ class ProductCrudController extends AdminCrudController
             ->add('price')
             ->add('enabled')
             ->add('activeInBc')
+            ->add('stock')
             ->add('brand')
+            ->add('forcePrice')
         ;
     }
 
