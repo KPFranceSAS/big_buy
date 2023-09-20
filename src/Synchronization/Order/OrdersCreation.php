@@ -138,7 +138,7 @@ class OrdersCreation
         $saleOrderLine->setSku($orderBigBuy['sku']);
         $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
         $saleOrderLine->setPrice($priceBigBuy);
-        $saleOrderLine->setBigBuyOrderLine($orderBigBuy['order_id']);
+        $saleOrderLine->setBigBuyOrderLine($orderBigBuy['id']);
             
             
         $this->manager->persist($saleOrderLine);
