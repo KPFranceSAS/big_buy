@@ -44,7 +44,7 @@ class OrdersStatusConfirmation
                     if(in_array($salesShipmentLine['type'], ['Item', 'Producto'])) {
                         $line = $saleOrder->getLineSequence($salesShipmentLine["lineNo"], $salesShipmentLine['no']);
                         if($line) {
-                            $csv->insertOne([$line->getBigBuyOrderLine(), $shipmentBc['number'], $salesShipmentLine['no'], $line->getPrice(),$salesShipmentLine['quantity'],date('Y-m-d')]);
+                            $csv->insertOne([$line->getBigBuyOrderLine(), $shipmentBc['number'], $salesShipmentLine['no'], $line->getPrice()*$salesShipmentLine['quantity'],$salesShipmentLine['quantity'],date('Y-m-d')]);
                         } else {
                             $csv->insertOne(['', $shipmentBc['number'], $salesShipmentLine['no'],null,$salesShipmentLine['quantity'],date('Y-m-d')]);
                         }

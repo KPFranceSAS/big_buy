@@ -91,18 +91,7 @@ class PricesFromBcSync
             'pricePublic' => $product->getPublicPrice(),
             'canonDigital' => $product->getCanonDigital()
         ];
-        
-
-        
     }
-
-
-
-
-    
-
-
-    
 
 
 
