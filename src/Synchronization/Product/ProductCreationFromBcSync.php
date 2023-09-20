@@ -6,6 +6,7 @@ use Akeneo\Pim\ApiClient\Search\SearchBuilder;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Entity\Brand;
 use App\Entity\Product;
+use App\Entity\User;
 use App\Mailer\SendEmail;
 use App\Pim\AkeneoConnector;
 use App\Synchronization\Product\ProductExportSync;
@@ -92,14 +93,23 @@ class ProductCreationFromBcSync
 
 
         if(count($newSkus)>0) {
-            $text= count($newSkus).' products has been added to BigBuy app. You nedd to define specific prices. You can edit on <a href="https://bigbuy.kps-group.com/">https://bigbuy.kps-group.com/</a><br/><br/>';
+            $text= count($newSkus).' products has been added to BigBuy app. If you want to edit specific prices, you can edit on <a href="https://bigbuy.kps-group.com/">https://bigbuy.kps-group.com/</a><br/><br/>';
             $text.='<table width="100%" cellpadding="0" cellspacing="0" style="min-width:100%;  border-collapse: collapse; border-style: solid; border-color: # aeabab;" border="1px">';
             foreach($newSkus as $newSku) {
                 $text.='<tr><td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $newSku['number'].'</td>';
                 $text.='<td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $newSku['displayName'].'</td></tr>';
             }
             $text.='</table>';
-            $this->sendEmail->sendEmail(['eclos@kpsport.com', 'devops@kpsport.com'], 'New products on BigBuy', $text);
+
+            $users = $this->manager->getRepository(User::class)->findAll();
+            $emails =['devops@kpsport.com'];
+            foreach($users as $user) {
+                $emails[] = $user->getEmail();
+            }
+
+
+
+            $this->sendEmail->sendEmail($emails, 'New products on BigBuy', $text);
         }
 
         $this->logger->info('---------------------------------------------------------------');
