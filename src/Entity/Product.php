@@ -74,6 +74,9 @@ class Product
     #[Gedmo\Versioned]
     private ?bool $forcePrice = false;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $minimumPrice = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -270,6 +273,18 @@ class Product
     public function setForcePrice(?bool $forcePrice): static
     {
         $this->forcePrice = $forcePrice;
+
+        return $this;
+    }
+
+    public function getMinimumPrice(): ?float
+    {
+        return $this->minimumPrice;
+    }
+
+    public function setMinimumPrice(?float $minimumPrice): static
+    {
+        $this->minimumPrice = $minimumPrice;
 
         return $this;
     }

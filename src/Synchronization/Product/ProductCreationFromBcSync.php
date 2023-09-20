@@ -123,6 +123,7 @@ class ProductCreationFromBcSync
         $productDb->setBundle($this->isBundle($itemBc));
         $productDb->setPublicPrice($this->getRetailPrice($productDb->getSku()));
         $productDb->setResellerPrice($this->getResellerPrice($productDb->getSku()));
+        $productDb->setMinimumPrice($this->getMinimumPrice($productDb->getSku()));
         $productDb->setCostPrice($itemBc['unitCost']);
         $productDb->setCanonDigital($this->getCanonDigitalForItem($itemBc));
         $productDb->setStockLaRoca($this->pricesFromBcSync->getFinalStockProductWarehouse($productDb->getSku(), $productDb->isBundle()));
@@ -201,6 +202,13 @@ class ProductCreationFromBcSync
     public function getResellerPrice($sku)
     {
         $itemPricesGroup = $this->bcConnector->getPricesSkuPerGroup($sku, 'PVD-ES');
+        return $this->getBestPrice($itemPricesGroup, false);
+    }
+
+
+    public function getMinimumPrice($sku)
+    {
+        $itemPricesGroup = $this->bcConnector->getPricesSkuPerGroup($sku, 'MINIMOS');
         return $this->getBestPrice($itemPricesGroup, false);
     }
 
