@@ -201,7 +201,7 @@ class ProductCreationFromBcSync
     public function getResellerPrice($sku)
     {
         $itemPricesGroup = $this->bcConnector->getPricesSkuPerGroup($sku, 'PVD-ES');
-        return $this->getBestPrice($itemPricesGroup, false);
+        return $this->getBestPrice($itemPricesGroup, true);
     }
 
 
