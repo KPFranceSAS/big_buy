@@ -72,9 +72,10 @@ class ProductCrudController extends AdminCrudController
             
             FormField::addPanel('Common Price')
                 ->setIcon('fas fa-money-bill'),
-            NumberField::new('costPrice', 'Cost price')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
-            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
-            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('costPrice', 'Cost price')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
+            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
+            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
+            NumberField::new('minimumPrice', 'MINIMOS')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
             FormField::addPanel('Big Buy Price')->setIcon('fas fa-money-bill-alt'),
             NumberField::new('price')->setDisabled(false)->setThousandsSeparator('')->setColumns(4),
             BooleanField::new('forcePrice')->renderAsSwitch(false)->setColumns(4),
@@ -82,6 +83,26 @@ class ProductCrudController extends AdminCrudController
             BooleanField::new('enabled')->renderAsSwitch(false)->setDisabled(true)->hideOnForm(),
             
             DateTimeField::new('updatedAt')->hideOnForm(),
+        ];
+    }
+
+
+
+    public function configureFieldsExport(): iterable
+    {
+        return [
+            TextField::new('sku'),
+            TextField::new('nameErp'),
+            AssociationField::new('brand'),
+            NumberField::new('stockLaRoca', 'Stock')->setDisabled(true)->setThousandsSeparator(''),
+            BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true)->setColumns(4),
+            NumberField::new('costPrice', 'Cost price')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('minimumPrice', 'MINIMOS')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
+            NumberField::new('price')->setDisabled(false)->setThousandsSeparator('')->setColumns(4),
+            BooleanField::new('forcePrice')->renderAsSwitch(false)->setColumns(4),
+            BooleanField::new('enabled')->renderAsSwitch(false)->setDisabled(true)->hideOnForm(),
         ];
     }
 
@@ -96,7 +117,7 @@ class ProductCrudController extends AdminCrudController
     ) {
         $directory = $params->get('kernel.project_dir') . '/var/export/';
         $fileName = u('Export_' . $this->getName() . '_' . date('Ymd_His'))->snake() . '.csv';
-        $fields = FieldCollection::new($this->configureFields(Crud::PAGE_INDEX));
+        $fields = FieldCollection::new($this->configureFieldsExport());
         $writer = $this->createWriter($fields, $directory . $fileName);
 
         $filters = $filterFactory->create($context->getCrud()->getFiltersConfig(), $fields, $context->getEntity());
