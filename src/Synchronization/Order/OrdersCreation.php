@@ -129,16 +129,14 @@ class OrdersCreation
         $this->bcConnector->createReservation($reservation);
         $saleOrder->addLog('Add reservation for line '.$saleOrderLineBcCreated['sequence'].' for '.$saleOrderLineBcCreated['quantity'].' '.$saleOrderLineBcCreated['lineDetails']['number']);
 
-        $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));
-
-
+        $idOrderBigBuy = array_key_exists('order_id', $orderBigBuy) ? $orderBigBuy['order_id'] : $orderBigBuy['id'];
         $saleOrderLine = new SaleOrderLine();
         $saleOrder->addSaleOrderLine($saleOrderLine);
         $saleOrderLine->setQuantity($orderBigBuy['quantity']);
         $saleOrderLine->setSku($orderBigBuy['sku']);
         $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
         $saleOrderLine->setPrice($priceBigBuy);
-        $saleOrderLine->setBigBuyOrderLine($orderBigBuy['id']);
+        $saleOrderLine->setBigBuyOrderLine($idOrderBigBuy);
             
             
         $this->manager->persist($saleOrderLine);
@@ -180,11 +178,15 @@ class OrdersCreation
 
     protected function manageErrorOrders(StorageAttributes $listFile, array $errors)
     {
-        $lines = [['order_id', 'sku', 'quantity','price', 'error']];
-        $this->errors[] = 'Order '.$errors[0]['id'].' cannot be integrated in our system';
+        
+
+        $keyOrder  = array_key_exists('order_id', $errors[0]) ? 'order_id' : 'id';
+        $lines = [[$keyOrder, 'sku', 'quantity','price', 'error']];
+
+        $this->errors[] = 'Order '.$errors[0][$keyOrder].' cannot be integrated in our system';
         foreach($errors as $error) {
             $line = [
-                $error['id'],
+                $error[$keyOrder],
                 $error['sku'],
                 $error['quantity'],
                 $error['price'],
