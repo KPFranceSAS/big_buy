@@ -10,6 +10,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 
 class SaleOrderCrudController extends AdminCrudController
@@ -35,7 +36,7 @@ class SaleOrderCrudController extends AdminCrudController
         return [
             
             DateTimeField::new('releaseDate')->setDisabled(true),
-            TextField::new('orderNumber')->setDisabled(true),
+            IntegerField::new('status')->setDisabled(true)->setTemplatePath('admin/fields/saleOrder/status.html.twig'),
             AssociationField::new('saleOrderLines')->setDisabled(true)->setTemplatePath('admin/fields/saleOrder/lines.html.twig')->onlyOnDetail(),
             DateTimeField::new('updatedAt')->hideOnForm(),
             ArrayField::new('logs')->setTemplatePath('admin/fields/logs.html.twig')->onlyOnDetail(),

@@ -125,6 +125,7 @@ class ProductCreationFromBcSync
         $productDb->setResellerPrice($this->getResellerPrice($productDb->getSku()));
         $productDb->setMinimumPrice($this->getMinimumPrice($productDb->getSku()));
         $productDb->setCostPrice($itemBc['unitCost']);
+        $productDb->setEan($itemBc['EAN']);
         $productDb->setCanonDigital($this->getCanonDigitalForItem($itemBc));
         $productDb->setStockLaRoca($this->pricesFromBcSync->getFinalStockProductWarehouse($productDb->getSku(), $productDb->isBundle()));
 

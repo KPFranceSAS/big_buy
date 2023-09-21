@@ -41,7 +41,7 @@ class OrdersStatusSent
                         if($saleOrder->haveNoLogWithMessage($log)) {
                             $saleOrder->addLog($log, 'error');
                             $this->logger->critical($log);
-                            $this->sendEmail->sendAlert('Pending shipment order '.$saleOrder->getOrderNumber(), $log);
+                            $this->sendEmail->sendEmail(['devops@kpsport.com', 'administracion@kpsport.com'], 'Pending shipment order '.$saleOrder->getOrderNumber(), $log);
                         }
                     }
                 } else {
@@ -49,7 +49,6 @@ class OrdersStatusSent
                     $saleOrder->setStatus(SaleOrder::STATUS_SENT_BY_WAREHOUSE);
                     $shipmentBc = $this->bcConnector->getSaleShipmentByOrderNumber($saleOrder->getOrderNumber());
                     $saleOrder->setShipmentNumber($shipmentBc['number']);
-                    
                 }
             } catch (Exception $e) {
                 $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());

@@ -67,6 +67,7 @@ class ProductCrudController extends AdminCrudController
             TextField::new('sku')->setDisabled(true)->setColumns(4),
             TextField::new('nameErp')->setDisabled(true)->setColumns(4),
             AssociationField::new('brand')->setDisabled(true)->setSortable(false)->setColumns(4),
+            TextField::new('ean')->setDisabled(true)->setColumns(4),
             NumberField::new('stockLaRoca', 'Stock')->setDisabled(true)->setThousandsSeparator('')->setColumns(4),
             BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true)->setColumns(4),
             
@@ -93,6 +94,7 @@ class ProductCrudController extends AdminCrudController
         return [
             TextField::new('sku'),
             TextField::new('nameErp'),
+            TextField::new('ean'),
             AssociationField::new('brand'),
             NumberField::new('stockLaRoca', 'Stock')->setDisabled(true)->setThousandsSeparator(''),
             BooleanField::new('activeInBc')->renderAsSwitch(false)->setDisabled(true)->setColumns(4),

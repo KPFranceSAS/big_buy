@@ -36,12 +36,12 @@ class OrdersStatusRelease
                 if(!$this->isSaleOrderRelease($saleOrder->getOrderNumber())) {
                     $nbMinutesSinceRelease = $this->getMinutesDifference($saleOrder->getReleaseDate(), $datenow);
                     $this->logger->info('Sale order has been marked to be released '.$nbMinutesSinceRelease.' minutes ago');
-                    if($nbMinutesSinceRelease > 60) {
-                        $log = 'Sale order '.$saleOrder->getOrderNumber().'  is not released. Please check what happens (stock, credit, customer misconfiguration, ....)';
+                    if($nbMinutesSinceRelease > 30) {
+                        $log = 'Sale order '.$saleOrder->getOrderNumber().' is not released for Big Buy. Please check what happens (stock, credit, or minimum prices ....)';
                         if($saleOrder->haveNoLogWithMessage($log)) {
                             $saleOrder->addLog($log, 'error');
                             $this->logger->critical($log);
-                            $this->sendEmail->sendAlert('Pending release order '.$saleOrder->getOrderNumber(), $log);
+                            $this->sendEmail->sendEmail(['devops@kpsport.com', 'administracion@kpsport.com'], 'Pending release order '.$saleOrder->getOrderNumber(), $log);
                         }
                     }
                 } else {

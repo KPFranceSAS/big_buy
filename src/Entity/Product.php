@@ -77,6 +77,9 @@ class Product
     #[ORM\Column(nullable: true)]
     private ?float $minimumPrice = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $ean = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -285,6 +288,18 @@ class Product
     public function setMinimumPrice(?float $minimumPrice): static
     {
         $this->minimumPrice = $minimumPrice;
+
+        return $this;
+    }
+
+    public function getEan(): ?string
+    {
+        return $this->ean;
+    }
+
+    public function setEan(?string $ean): static
+    {
+        $this->ean = $ean;
 
         return $this;
     }

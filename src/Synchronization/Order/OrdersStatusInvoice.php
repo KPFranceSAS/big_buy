@@ -44,7 +44,7 @@ class OrdersStatusInvoice
                     $csv->setDelimiter(';');
                     $csv->insertOne(['invoice_number','delivery_note_number','sku','price','tax','digital_canon','eco_tax','quantity','type','date']);
                     foreach($invoiceBc['salesInvoiceLines'] as $salesInvoiceLine) {
-                        if(in_array($salesInvoiceLine['type'], ['Item', 'Producto'])) {
+                        if(in_array($salesInvoiceLine['lineType'], ['Item', 'Producto'])) {
                             $sku = $salesInvoiceLine['lineDetails']['number'];
                             $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
                             $csv->insertOne([
@@ -63,7 +63,6 @@ class OrdersStatusInvoice
                     }
             
                     $this->bigBuyStorage->write('Invoices/'.$saleOrder->getOrderNumber().'_'.date('Ymd_His').'.csv', $csv->toString());
-                    $saleOrder->addLog('Confirmed delivery notes');
                     $saleOrder->setStatus(SaleOrder::STATUS_INVOICED);
                 } else {
                     $this->logger->alert('Invoice not found');
