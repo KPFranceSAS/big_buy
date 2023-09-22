@@ -174,10 +174,13 @@ class OrdersCreation
     {
         $saleOrder = $this->manager->getRepository(SaleOrder::class)->findOneBy(['releaseDateString'=>$dateTime->format('Y-m-d H:i')]);
         if(!$saleOrder) {
+            $customerBc = $this->bcConnector->getCustomerByNumber(self::CUSTOMER_NUMBER);
+
+        
             $saleOrderBc = new SaleOrderBc();
             $saleOrderBc->customerNumber = self::CUSTOMER_NUMBER;
-            $saleOrderBc->shippingAgent = "DHL PARCEL";
-            $saleOrderBc->shippingAgentService = 'DHL1';
+            $saleOrderBc->shippingAgent = $customerBc['shippingAgentCode'];
+            $saleOrderBc->shippingAgentService =  $customerBc['shippingAgentServiceCode'];
             $saleOrderBc->externalDocumentNumber ='RELEASE '.$dateTime->format('d-m-Y H:i');
             $saleOrderBc->shipToName =' ALL 4 BUSINESS, SL';
             $saleOrderBc->shippingPostalAddress->street ='Carrer Quinsà, 12';
