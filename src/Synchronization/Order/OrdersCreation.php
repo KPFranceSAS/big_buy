@@ -105,12 +105,7 @@ class OrdersCreation
             foreach($saleLinesArrayToIntegrate as $k => $saleLineArray) {
                 $this->addSaleOrderLine($saleOrder, $saleOrderBc, $saleLineArray);
             }
-        } catch (Exception $e) {
-            $this->sendEmail->sendAlert('Error OrdersCreation line 92', $e->getMessage());
-            $saleOrder->addError('Error '.$e->getMessage());
-        }
-
-        try {
+       
             if($errorOrder) {
                 $this->manageErrorOrders($listFile, $saleLinesArray);
             } else {
