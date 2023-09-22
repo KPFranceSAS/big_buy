@@ -46,7 +46,7 @@ class OrdersStatusConfirmation
                         if($line) {
                             $csv->insertOne([$line->getBigBuyOrderLine(), $shipmentBc['number'], $salesShipmentLine['no'], $line->getPrice()*$salesShipmentLine['quantity'],$salesShipmentLine['quantity'],date('Y-m-d')]);
                         } else {
-                            $csv->insertOne(['', $shipmentBc['number'], $salesShipmentLine['no'],null,$salesShipmentLine['quantity'],date('Y-m-d')]);
+                            $csv->insertOne(['', $shipmentBc['number'], $salesShipmentLine['no'],null,$salesShipmentLine['quantity'],date('d_m_Y')]);
                         }
                     }
                 }
