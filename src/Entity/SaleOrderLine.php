@@ -40,6 +40,9 @@ class SaleOrderLine
     #[ORM\Column]
     private ?float $price = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $name = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -113,6 +116,18 @@ class SaleOrderLine
     public function setPrice(float $price): static
     {
         $this->price = $price;
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): static
+    {
+        $this->name = $name;
 
         return $this;
     }

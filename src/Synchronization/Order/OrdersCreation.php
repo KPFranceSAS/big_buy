@@ -48,7 +48,13 @@ class OrdersCreation
         /** @var \League\Flysystem\StorageAttributes $listFile */
         foreach($listFiles as $listFile) {
             if($listFile->isFile()) {
-                $nbIntegrated += (int)$this->integrateFile($listFile);
+                try {
+                    $nbIntegrated += (int)$this->integrateFile($listFile);
+                } catch (Exception $e) {
+                    $this->errors[] = $e->getMessage();
+                    $this->logger->critical($e->getMessage());
+                }
+                
             }
         }
 
@@ -66,6 +72,18 @@ class OrdersCreation
         
         $saleLinesArrayToIntegrate = [];
         $saleLinesArray = $this->extractContent($listFile->path());
+
+        if(count($saleLinesArray)>0) {
+            
+            $saleLines = $this->manager->getRepository(SaleOrderLine::class)->findBy(['bigBuyOrderLine'=>$saleLinesArray[0]['id']]);
+            if(count($saleLines)>0) {
+                $this->logger->info('Order '.$saleLinesArray[0]['id'].' already integrated');
+                $this->bigBuyStorage->delete($listFile->path());
+                return 0;
+            }
+        }
+
+
         $this->logger->info('Sale lines in array  >>>'.count($saleLinesArray));
         $errorOrder=false;
         foreach($saleLinesArray as $k => $saleLineArray) {
@@ -88,17 +106,24 @@ class OrdersCreation
                 $this->addSaleOrderLine($saleOrder, $saleOrderBc, $saleLineArray);
             }
         } catch (Exception $e) {
-            $this->sendEmail->sendAlert('Error', $e->getMessage());
+            $this->sendEmail->sendAlert('Error OrdersCreation line 92', $e->getMessage());
+            $saleOrder->addError('Error '.$e->getMessage());
         }
 
-        if($errorOrder) {
-            $this->manageErrorOrders($listFile, $saleLinesArray);
-        } else {
-            $saleOrder->addLog('Copy locally file '.$listFile->path().'in success');
-            $this->defaultStorage->write(str_replace('Orders/', 'Orders/Success/', $listFile->path()), $this->bigBuyStorage->read($listFile->path()));
-            $saleOrder->addLog('Move on Big Buy file '.$listFile->path().'in Processed ');
-            $this->bigBuyStorage->move($listFile->path(), str_replace('Orders/', 'Orders/Processed/', $listFile->path()));
+        try {
+            if($errorOrder) {
+                $this->manageErrorOrders($listFile, $saleLinesArray);
+            } else {
+                $saleOrder->addLog('Copy locally file '.$listFile->path().' in success');
+                $this->defaultStorage->write(str_replace('Orders/', 'Orders/Success/', $listFile->path()), $this->bigBuyStorage->read($listFile->path()));
+                $saleOrder->addLog('Move on Big Buy file '.$listFile->path().' in Processed ');
+                $this->bigBuyStorage->move($listFile->path(), str_replace('Orders/', 'Orders/Processed/', $listFile->path()));
+            }
+        } catch (Exception $e) {
+            $this->sendEmail->sendAlert('Error OrdersCreation line 105', $e->getMessage());
+            $saleOrder->addError('Error '.$e->getMessage());
         }
+        $this->manager->flush();
         return count($saleLinesArrayToIntegrate)>0;
     }
 
@@ -134,6 +159,7 @@ class OrdersCreation
         $saleOrder->addSaleOrderLine($saleOrderLine);
         $saleOrderLine->setQuantity($orderBigBuy['quantity']);
         $saleOrderLine->setSku($orderBigBuy['sku']);
+        $saleOrderLine->setName($itemBc['displayName']);
         $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
         $saleOrderLine->setPrice($priceBigBuy);
         $saleOrderLine->setBigBuyOrderLine($idOrderBigBuy);

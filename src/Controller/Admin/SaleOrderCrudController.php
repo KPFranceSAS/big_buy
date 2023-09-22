@@ -35,9 +35,13 @@ class SaleOrderCrudController extends AdminCrudController
     {
         return [
             
-            DateTimeField::new('releaseDate')->setDisabled(true),
-            IntegerField::new('status')->setDisabled(true)->setTemplatePath('admin/fields/saleOrder/status.html.twig'),
-            AssociationField::new('saleOrderLines')->setDisabled(true)->setTemplatePath('admin/fields/saleOrder/lines.html.twig')->onlyOnDetail(),
+            DateTimeField::new('releaseDate'),
+            DateTimeField::new('arrivalTime'),
+            TextField::new('orderNumber'),
+            TextField::new('shipmentNumber'),
+            TextField::new('invoiceNumber'),
+            IntegerField::new('status')->setTemplatePath('admin/fields/saleOrder/status.html.twig'),
+            AssociationField::new('saleOrderLines')->setTemplatePath('admin/fields/saleOrder/lines.html.twig')->onlyOnDetail(),
             DateTimeField::new('updatedAt')->hideOnForm(),
             ArrayField::new('logs')->setTemplatePath('admin/fields/logs.html.twig')->onlyOnDetail(),
         ];
