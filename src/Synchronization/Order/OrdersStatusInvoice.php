@@ -50,10 +50,10 @@ class OrdersStatusInvoice
 
                             if($productDb->getCanonDigital()){
                                 $canonDigital = $productDb->getCanonDigital()*$salesInvoiceLine['quantity'];
-                                $netAmount = $salesInvoiceLine['netTaxAmount'] + round($canonDigital*0.21,0,2);
+                                $netTaxAmount = $salesInvoiceLine['netTaxAmount'] + $canonDigital*0.21;
                             } else {
                                 $canonDigital = 0;
-                                $netAmount = $salesInvoiceLine['netTaxAmount'];
+                                $netTaxAmount = $salesInvoiceLine['netTaxAmount'];
                             }
 
                             $csv->insertOne([
@@ -61,7 +61,7 @@ class OrdersStatusInvoice
                                 $saleOrder->getShipmentNumber(),
                                 $sku,
                                 $salesInvoiceLine['netAmount'],
-                                $netAmount,
+                                round($netTaxAmount,2),
                                 $canonDigital,
                                0,
                                $salesInvoiceLine['quantity'],
