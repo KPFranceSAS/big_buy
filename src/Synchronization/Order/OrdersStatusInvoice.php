@@ -47,13 +47,22 @@ class OrdersStatusInvoice
                         if(in_array($salesInvoiceLine['lineType'], ['Item', 'Producto'])) {
                             $sku = $salesInvoiceLine['lineDetails']['number'];
                             $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
+
+                            if($productDb->getCanonDigital()){
+                                $canonDigital = $productDb->getCanonDigital()*$salesInvoiceLine['quantity'];
+                                $netAmount = $salesInvoiceLine['netTaxAmount'] + $canonDigital*0.21;
+                            } else {
+                                $canonDigital = 0;
+                                $netAmount = $salesInvoiceLine['netTaxAmount'];
+                            }
+
                             $csv->insertOne([
                                 $invoiceBc["number"],
                                 $saleOrder->getShipmentNumber(),
                                 $sku,
                                 $salesInvoiceLine['netAmount'],
-                                $salesInvoiceLine['netTaxAmount'],
-                                $productDb ? $productDb->getCanonDigital()*$salesInvoiceLine['quantity'] : 0,
+                                $netAmount,
+                                $canonDigital,
                                0,
                                $salesInvoiceLine['quantity'],
                                'type_product',
