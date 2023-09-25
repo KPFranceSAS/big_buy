@@ -177,7 +177,8 @@ class ProductExportSync
             "energy_classification",
             "graphic_card",
             "chipset",
-            "keyboard"
+            "keyboard",
+            "form_factor"
         ];
 
         foreach ($choices as $choice) {
@@ -252,6 +253,51 @@ class ProductExportSync
                 "convertUnit" => 'W' ,
                 'round' => 0
             ],
+
+            [
+                "field" => 'cooling_capacity',
+                "unit" => 'WATT',
+                "convertUnit" => 'W' ,
+                'round' => 0
+            ],
+
+            [
+                "field" => 'processor_speed',
+                "unit" => 'GIGAHERTZ',
+                "convertUnit" => 'GHz' ,
+                'round' => 2
+            ],
+
+            [
+                "field" => 'screen_size',
+                "unit" => 'CENTIMETER',
+                "convertUnit" => 'cm' ,
+                'round' => 2
+            ],
+
+            [
+                "field" => 'cable_length',
+                "unit" => 'CENTIMETER',
+                "convertUnit" => 'cm' ,
+                'round' => 0
+            ],
+
+            [
+                "field" => 'screen_resolution_pixel',
+                "unit" => 'GIGAPIXEL',
+                "convertUnit" => 'Gpx' ,
+                'round' => 2
+            ],
+            [
+                "field" => 'camera_resolution',
+                "unit" => 'GIGAPIXEL',
+                "convertUnit" => 'Gpx' ,
+                'round' => 2
+            ],
+            
+
+
+            
             
 
             
