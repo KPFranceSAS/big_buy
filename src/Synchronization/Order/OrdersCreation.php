@@ -5,6 +5,7 @@ namespace App\Synchronization\Order;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\BusinessCentral\Model\SaleOrderBc;
 use App\BusinessCentral\Model\SaleOrderLineBc;
+use App\Entity\FileIntegrated;
 use App\Entity\Product;
 use App\Entity\SaleOrder;
 use App\Entity\SaleOrderLine;
@@ -69,20 +70,16 @@ class OrdersCreation
     protected function integrateFile(StorageAttributes $listFile)
     {
         $this->logger->info('Integrate file >>>'.$listFile->path());
-        
-        $saleLinesArrayToIntegrate = [];
-        $saleLinesArray = $this->extractContent($listFile->path());
 
-        if(count($saleLinesArray)>0) {
-            
-            $saleLines = $this->manager->getRepository(SaleOrderLine::class)->findBy(['bigBuyOrderLine'=>$saleLinesArray[0]['id']]);
-            if(count($saleLines)>0) {
-                $this->logger->info('Order '.$saleLinesArray[0]['id'].' already integrated');
-                $this->bigBuyStorage->delete($listFile->path());
-                return 0;
-            }
+        $fileIntegrated = $this->manager->getRepository(FileIntegrated::class)->findOneBy(['filename'=>str_replace('Orders/', '', $listFile->path())]);
+        if($fileIntegrated) {
+            $this->logger->info('File '.$listFile->path().' already integrated');
+            $this->bigBuyStorage->delete($listFile->path());
+            return 0;
         }
 
+        $saleLinesArrayToIntegrate = [];
+        $saleLinesArray = $this->extractContent($listFile->path());
 
         $this->logger->info('Sale lines in array  >>>'.count($saleLinesArray));
         $errorOrder=false;
@@ -105,6 +102,8 @@ class OrdersCreation
             foreach($saleLinesArrayToIntegrate as $k => $saleLineArray) {
                 $this->addSaleOrderLine($saleOrder, $saleOrderBc, $saleLineArray);
             }
+
+            
        
             if($errorOrder) {
                 $this->manageErrorOrders($listFile, $saleLinesArray);
@@ -114,6 +113,11 @@ class OrdersCreation
                 $saleOrder->addLog('Move on Big Buy file '.$listFile->path().' in Processed ');
                 $this->bigBuyStorage->move($listFile->path(), str_replace('Orders/', 'Orders/Processed/', $listFile->path()));
             }
+            $fileTreated = new FileIntegrated();
+            $fileTreated->setFilename(str_replace('Orders/', '', $listFile->path()));
+            $this->manager->persist($fileTreated);
+            
+            
         } catch (Exception $e) {
             $this->sendEmail->sendAlert('Error OrdersCreation line 105', $e->getMessage());
             $saleOrder->addError('Error '.$e->getMessage());
@@ -123,8 +127,22 @@ class OrdersCreation
     }
 
 
-    protected function addSaleOrderLine(SaleOrder $saleOrder, array $saleOrderBc, array $orderBigBuy)
+    protected function addSaleOrderLine(SaleOrder $saleOrder, array $saleOrderBc, array $orderBigBuy): int
     {
+
+        $idOrderBigBuy = array_key_exists('order_id', $orderBigBuy) ? $orderBigBuy['order_id'] : $orderBigBuy['id'];
+
+        $saleOrderLineBc = $this->manager->getRepository(SaleOrderLine::class)->findOneBy([
+            'bigBuyOrderLine'=>$idOrderBigBuy,
+            'sku'=>$orderBigBuy['sku']
+        ]);
+
+        if($saleOrderLineBc){
+            $this->logger->info('Already recorded in Business central');
+            return 0;
+        }
+
+
         $priceBigBuy = floatval($orderBigBuy['price']);
         $saleOrderLineBc = new SaleOrderLineBc();
         $itemBc = $this->bcConnector->getItemByNumber($orderBigBuy['sku']);
@@ -149,12 +167,13 @@ class OrdersCreation
         $this->bcConnector->createReservation($reservation);
         $saleOrder->addLog('Add reservation for line '.$saleOrderLineBcCreated['sequence'].' for '.$saleOrderLineBcCreated['quantity'].' '.$saleOrderLineBcCreated['lineDetails']['number']);
 
-        $idOrderBigBuy = array_key_exists('order_id', $orderBigBuy) ? $orderBigBuy['order_id'] : $orderBigBuy['id'];
+        
         $saleOrderLine = new SaleOrderLine();
         $saleOrder->addSaleOrderLine($saleOrderLine);
         $saleOrderLine->setQuantity($orderBigBuy['quantity']);
         $saleOrderLine->setSku($orderBigBuy['sku']);
         $saleOrderLine->setName($itemBc['displayName']);
+        $saleOrderLine->setUnitCost($itemBc['unitCost']);
         $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
         $saleOrderLine->setPrice($priceBigBuy);
         $saleOrderLine->setBigBuyOrderLine($idOrderBigBuy);
@@ -162,6 +181,8 @@ class OrdersCreation
             
         $this->manager->persist($saleOrderLine);
         $this->manager->flush();
+
+        return 1;
     }
 
 
@@ -202,8 +223,6 @@ class OrdersCreation
 
     protected function manageErrorOrders(StorageAttributes $listFile, array $errors)
     {
-        
-
         $keyOrder  = array_key_exists('order_id', $errors[0]) ? 'order_id' : 'id';
         $lines = [[$keyOrder, 'sku', 'quantity','price', 'error']];
 
