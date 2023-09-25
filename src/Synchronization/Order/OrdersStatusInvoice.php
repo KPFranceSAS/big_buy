@@ -50,7 +50,7 @@ class OrdersStatusInvoice
 
                             if($productDb->getCanonDigital()){
                                 $canonDigital = $productDb->getCanonDigital()*$salesInvoiceLine['quantity'];
-                                $netAmount = $salesInvoiceLine['netTaxAmount'] + $canonDigital*0.21;
+                                $netAmount = $salesInvoiceLine['netTaxAmount'] + round($canonDigital*0.21,0,2);
                             } else {
                                 $canonDigital = 0;
                                 $netAmount = $salesInvoiceLine['netTaxAmount'];
