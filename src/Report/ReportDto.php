@@ -407,18 +407,19 @@ class ReportDto
         $chart->setData([
             'labels' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             'datasets' => [
-                [
-                    'label' => 'Revenues week '.$this->dateStartPeriod->format('W'),
-                    'type' => 'bar',
-                    'backgroundColor' => 'rgb(6,121,183)',
-                    'data' => $this->getRevenuePerDayPerPeriod($this->dateStartPeriod, $this->dateEndPeriod),
-                    "yAxisID" => 'y',
-                ],
+                
                 [
                     'label' => 'Revenues week '.$this->pastDateStartPeriod->format('W'),
                     'type' => 'bar',
                     'backgroundColor' => 'rgb(255, 99, 132)',
                     'data' => $this->getRevenuePerDayPerPeriod($this->pastDateStartPeriod, $this->pastDateEndPeriod),
+                    "yAxisID" => 'y',
+                ],
+                [
+                    'label' => 'Revenues week '.$this->dateStartPeriod->format('W'),
+                    'type' => 'bar',
+                    'backgroundColor' => 'rgb(6,121,183)',
+                    'data' => $this->getRevenuePerDayPerPeriod($this->dateStartPeriod, $this->dateEndPeriod),
                     "yAxisID" => 'y',
                 ],
                
@@ -452,17 +453,18 @@ class ReportDto
         $chart->setData([
             'labels' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
             'datasets' => [
-                [
-                    'label' => 'Week '.$this->dateStartPeriod->format('W'),
-                    'backgroundColor' => 'rgb(6,121,183)',
-                    'type' => 'bar',
-                    'data' => $this->getOrderPerDayPerPeriod($this->dateStartPeriod, $this->dateEndPeriod),
-                ],
+                
                 [
                     'label' => 'Week '.$this->pastDateStartPeriod->format('W'),
                     'backgroundColor' => 'rgb(255, 99, 132)',
                     'type' => 'bar',
                     'data' => $this->getOrderPerDayPerPeriod($this->pastDateStartPeriod, $this->pastDateEndPeriod),
+                ],
+                [
+                    'label' => 'Week '.$this->dateStartPeriod->format('W'),
+                    'backgroundColor' => 'rgb(6,121,183)',
+                    'type' => 'bar',
+                    'data' => $this->getOrderPerDayPerPeriod($this->dateStartPeriod, $this->dateEndPeriod),
                 ]
                
             ],
@@ -561,7 +563,8 @@ class ReportDto
     }
 
 
-    public function getAllSaleLineForPeriod(DateTime $dateStart, DateTime $dateEnd){
+    public function getAllSaleLineForPeriod(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrdersLine = [];
         foreach($this->saleOrderLines as $saleOrderLine) {
             if($saleOrderLine->getCreatedAt()->format('Ymd')>= $dateStart->format('Ymd') &&
@@ -574,12 +577,13 @@ class ReportDto
     }
 
 
-    public function getAllSaleLineForPeriodByBrand(DateTime $dateStart, DateTime $dateEnd){
+    public function getAllSaleLineForPeriodByBrand(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLines = $this->getAllSaleLineForPeriod($dateStart, $dateEnd);
         $brands =[];
         foreach($saleOrderLines as $saleOrderLine) {
             $brand = $saleOrderLine->getBrand();
-            if(!array_key_exists($brand, $brands)){
+            if(!array_key_exists($brand, $brands)) {
                 $brands[$brand]=[];
             }
             $brands[$brand][]=$saleOrderLine;
@@ -589,12 +593,13 @@ class ReportDto
     }
 
 
-    public function getRevenueByBrand(DateTime $dateStart, DateTime $dateEnd){
+    public function getRevenueByBrand(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLinesByBrand = $this->getAllSaleLineForPeriodByBrand($dateStart, $dateEnd);
         $brandRevenues = [];
-        foreach( $saleOrderLinesByBrand as $brand => $saleOrderLines){
+        foreach($saleOrderLinesByBrand as $brand => $saleOrderLines) {
             $revenue = 0;
-            foreach($saleOrderLines as $saleOrderLine){
+            foreach($saleOrderLines as $saleOrderLine) {
                 $revenue += $saleOrderLine->getTotalPrice();
             }
             $brandRevenues[$brand]=$revenue;
@@ -603,12 +608,13 @@ class ReportDto
     }
 
 
-    public function getQuantityByBrand(DateTime $dateStart,DateTime $dateEnd){
+    public function getQuantityByBrand(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLinesByBrand = $this->getAllSaleLineForPeriodByBrand($dateStart, $dateEnd);
         $brands = [];
-        foreach( $saleOrderLinesByBrand as $brand => $saleOrderLines){
+        foreach($saleOrderLinesByBrand as $brand => $saleOrderLines) {
             $qty = 0;
-            foreach($saleOrderLines as $saleOrderLine){
+            foreach($saleOrderLines as $saleOrderLine) {
                 $qty += $saleOrderLine->getQuantity();
             }
             $brands[$brand]=$qty;
@@ -618,12 +624,13 @@ class ReportDto
 
 
 
-    public function getMarginByBrand(DateTime $dateStart,DateTime $dateEnd){
+    public function getMarginByBrand(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLinesByBrand = $this->getAllSaleLineForPeriodByBrand($dateStart, $dateEnd);
         $brands = [];
-        foreach( $saleOrderLinesByBrand as $brand => $saleOrderLines){
+        foreach($saleOrderLinesByBrand as $brand => $saleOrderLines) {
             $qty = 0;
-            foreach($saleOrderLines as $saleOrderLine){
+            foreach($saleOrderLines as $saleOrderLine) {
                 $qty += $saleOrderLine->getMargin();
             }
             $brands[$brand]=$qty;
@@ -631,13 +638,14 @@ class ReportDto
         return $brands;
     }
 
-    public function getMarginRateByBrand(DateTime $dateStart,DateTime $dateEnd){
+    public function getMarginRateByBrand(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLinesByBrand = $this->getAllSaleLineForPeriodByBrand($dateStart, $dateEnd);
         $brands = [];
-        foreach( $saleOrderLinesByBrand as $brand => $saleOrderLines){
+        foreach($saleOrderLinesByBrand as $brand => $saleOrderLines) {
             $revenue = 0;
             $cost = 0;
-            foreach($saleOrderLines as $saleOrderLine){
+            foreach($saleOrderLines as $saleOrderLine) {
                 $revenue += $saleOrderLine->getTotalPrice();
                 $cost +=  $saleOrderLine->getTotalCost();
             }
@@ -684,7 +692,8 @@ class ReportDto
 
 
 
-    public function getBackgroundColors($nb){
+    public function getBackgroundColors($nb)
+    {
         $colors = [
             "#733400",
             "#440099",
@@ -703,21 +712,22 @@ class ReportDto
             "#006d82"
         ];
 
-        return array_slice($colors,0, $nb); 
+        return array_slice($colors, 0, $nb);
 
 
 
     }
 
 
-    public function getAllSaleLineForPeriodByProduct(DateTime $dateStart, DateTime $dateEnd){
+    public function getAllSaleLineForPeriodByProduct(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLines = $this->getAllSaleLineForPeriod($dateStart, $dateEnd);
         $products =[];
         foreach($saleOrderLines as $saleOrderLine) {
             $sku = $saleOrderLine->getProduct()->getSku();
-            if(!array_key_exists($sku, $products)){
+            if(!array_key_exists($sku, $products)) {
                 $products[$sku]=[
-                    'product'=>$saleOrderLine->getProduct(), 
+                    'product'=>$saleOrderLine->getProduct(),
                     'lines'=>[]
                 ];
             }
@@ -727,64 +737,69 @@ class ReportDto
     }
 
 
-    public function getTopRevenueProducts(){
+    public function getTopRevenueProducts()
+    {
         $topProducts =$this->getTopByProducts($this->dateStartPeriod, $this->dateEndPeriod);
         usort($topProducts, function ($item1, $item2) {
             return $item2["revenue"] <=> $item1["revenue"];
         });
-        return array_slice($topProducts,0,5);
+        return array_slice($topProducts, 0, 5);
         
     }
 
 
-    public function getTopQuantityProducts(){
+    public function getTopQuantityProducts()
+    {
         $topProducts =$this->getTopByProducts($this->dateStartPeriod, $this->dateEndPeriod);
         usort($topProducts, function ($item1, $item2) {
             return $item2["quantity"] <=> $item1["quantity"];
         });
-        return array_slice($topProducts,0,5);
+        return array_slice($topProducts, 0, 5);
     }
 
 
-    public function getTopMarginProducts(){
+    public function getTopMarginProducts()
+    {
         $topProducts =$this->getTopByProducts($this->dateStartPeriod, $this->dateEndPeriod);
         usort($topProducts, function ($item1, $item2) {
             return $item2["margin"] <=> $item1["margin"];
         });
-        return array_slice($topProducts,0,5);
+        return array_slice($topProducts, 0, 5);
     }
 
-    public function getTopMarginRateProducts(){
+    public function getTopMarginRateProducts()
+    {
         $topProducts =$this->getTopByProducts($this->dateStartPeriod, $this->dateEndPeriod);
         usort($topProducts, function ($item1, $item2) {
             return $item2["marginRate"] <=> $item1["marginRate"];
         });
-        return array_slice($topProducts,0,5);
+        return array_slice($topProducts, 0, 5);
     }
 
 
-    public function getTopByProducts(DateTime $dateStart, DateTime $dateEnd){
+    public function getTopByProducts(DateTime $dateStart, DateTime $dateEnd)
+    {
         $saleOrderLinesByProduct = $this->getAllSaleLineForPeriodByProduct($dateStart, $dateEnd);
         $productRevenues = [];
-        foreach( $saleOrderLinesByProduct as $saleOrderLine){
+        foreach($saleOrderLinesByProduct as $saleOrderLine) {
             $revenue = 0;
             $quantity = 0;
             $cost = 0;
-            foreach($saleOrderLine['lines'] as $line){
+            foreach($saleOrderLine['lines'] as $line) {
                 $revenue += $line->getTotalPrice();
-                $cost += round($line->getTotalCost(),2);
+                $cost += round($line->getTotalCost(), 2);
                 $quantity += $line->getQuantity();
             }
             $productRevenues[]=[
-                "revenue" => $revenue, 
+                "revenue" => $revenue,
                 "quantity" => $quantity,
                 "margin"=> $revenue-$cost,
-                "marginRate" => $this->calculateMarginRate($revenue, $cost), 
-                'sku'=> $saleOrderLine['product']->getSku(), 
+                "marginRate" => $this->calculateMarginRate($revenue, $cost),
+                'sku'=> $saleOrderLine['product']->getSku(),
                 "name" => $saleOrderLine['product']->getNameErp()
             ];
         }
-        return $productRevenues;   
+        return $productRevenues;
     }
 
 

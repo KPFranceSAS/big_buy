@@ -128,22 +128,22 @@
 				</div>
 				<div class="row">
 					<div class="col-12 col-md-6 col-lg-3 mt-4">
-						<h5 class="">Revenues by brand
+						<h5 class="">Revenues by brand for week {{reportDto.dateReport|date('W')}}
 						</h5>
 						{{ render_chart(reportDto.getChartRevenueByBrand) }}
 					</div>
 					<div class="col-12 col-md-6  col-lg-3  mt-4">
-						<h5 class="">Quantity by brand
+						<h5 class="">Quantity by brand for week {{reportDto.dateReport|date('W')}}
 						</h5>
 						{{ render_chart(reportDto.getChartQuantityByBrand) }}
 					</div>
 					<div class="col-12 col-md-6  col-lg-3 mt-4">
-						<h5 class="">Margin by brand
+						<h5 class="">Margin by brand for week {{reportDto.dateReport|date('W')}}
 						</h5>
 						{{ render_chart(reportDto.getChartMarginByBrand) }}
 					</div>
 					<div class="col-12 col-md-6  col-lg-3 mt-4">
-						<h5 class="">Margin rate by brand
+						<h5 class="">Margin rate by brand for week {{reportDto.dateReport|date('W')}}
 						</h5>
 						{{ render_chart(reportDto.getChartMarginRateByBrand) }}
 
@@ -151,7 +151,7 @@
 				</div>
 				<div class="row">
 					<div class="col-12 col-sm-6 mt-4">
-						<h5 class="">Top 5 revenues by product during Week {{reportDto.dateReport|date('W')}}</h5>
+						<h5 class="">Top 5 revenues by product for week {{reportDto.dateReport|date('W')}}</h5>
 						<div class="mt-2">
 							<table class="table datagrid  ">
 								<thead>
@@ -181,7 +181,7 @@
 						</div>
 					</div>
 					<div class="col-12 col-sm-6 mt-4">
-						<h5 class="">Top 5 quantities by product  during Week {{reportDto.dateReport|date('W')}}
+						<h5 class="">Top 5 quantities by product  for week {{reportDto.dateReport|date('W')}}
 						</h5>
 						<div class="mt-2">
 							<table class="table datagrid  ">
@@ -212,7 +212,7 @@
 						</div>
 					</div>
 					<div class="col-12 col-sm-6 mt-4">
-						<h5 class="">Top 5 margin by product during Week {{reportDto.dateReport|date('W')}}
+						<h5 class="">Top 5 margin by product for week {{reportDto.dateReport|date('W')}}
 						</h5>
 						<div class="mt-2">
 							<table class="table datagrid  ">
@@ -243,7 +243,7 @@
 						</div>
 					</div>
 					<div class="col-12 col-sm-6 mt-4">
-						<h5 class="">Top 5 margin rates by product during Week {{reportDto.dateReport|date('W')}}</h5>
+						<h5 class="">Top 5 margin rates by product for week {{reportDto.dateReport|date('W')}}</h5>
 						<div class="mt-2">
 							<table class="table datagrid  ">
 								<thead>
