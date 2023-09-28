@@ -46,10 +46,28 @@ class SaleOrderLine
     #[ORM\Column(nullable: true)]
     private ?float $unitCost = null;
 
+    #[ORM\ManyToOne(inversedBy: 'saleOrderLines')]
+    private ?Product $product = null;
+
     public function getId(): ?int
     {
         return $this->id;
     }
+
+
+    public function getOrderStatus(){
+        return $this->saleOrder->getStatus();
+    }
+
+
+    public function getOrderNumber(){
+        return $this->saleOrder->getOrderNumber();
+    }
+
+    public function getReleaseDate(){
+        return $this->saleOrder->getReleaseDate();
+    }
+    
 
     public function getSku(): ?string
     {
@@ -146,4 +164,49 @@ class SaleOrderLine
 
         return $this;
     }
+
+    public function getProduct(): ?Product
+    {
+        return $this->product;
+    }
+
+    public function setProduct(?Product $product): static
+    {
+        $this->product = $product;
+
+        return $this;
+    }
+
+
+
+    public function getBrand()
+    {
+        return $this->product ? strtoupper($this->product->getBrand()->getName()) : '';
+    }
+
+    public function getTotalPrice()
+    {
+        return $this->quantity*$this->price;
+    }
+
+    public function getTotalCost()
+    {
+        return $this->quantity*$this->unitCost;
+    }
+
+
+    public function getMargin()
+    {
+        return $this->getTotalPrice() - $this->getTotalCost();
+    }
+
+
+    public function getMarginRate()
+    {
+        return round(($this->getMargin()/$this->getTotalPrice())*100, 2).'%';
+    }
+
+
+
+
 }

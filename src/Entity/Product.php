@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Helper\Traits\TraitLoggable;
 use App\Helper\Traits\TraitTimeUpdated;
 use App\Repository\ProductRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -80,11 +82,31 @@ class Product
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $ean = null;
 
+    #[ORM\OneToMany(mappedBy: 'product', targetEntity: SaleOrderLine::class)]
+    private Collection $saleOrderLines;
+
+    public function __construct()
+    {
+        $this->saleOrderLines = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
+
+
+    public function getMargin()
+    {
+        return $this->getFinalPriceBigBuy() - $this->getCostPrice();
+    }
+
+
+    public function getMarginRate()
+    {
+        return $this->getFinalPriceBigBuy() ?  round(($this->getMargin()/$this->getFinalPriceBigBuy()), 2) : 0;
+    }
 
 
 
@@ -300,6 +322,36 @@ class Product
     public function setEan(?string $ean): static
     {
         $this->ean = $ean;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, SaleOrderLine>
+     */
+    public function getSaleOrderLines(): Collection
+    {
+        return $this->saleOrderLines;
+    }
+
+    public function addSaleOrderLine(SaleOrderLine $saleOrderLine): static
+    {
+        if (!$this->saleOrderLines->contains($saleOrderLine)) {
+            $this->saleOrderLines->add($saleOrderLine);
+            $saleOrderLine->setProduct($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSaleOrderLine(SaleOrderLine $saleOrderLine): static
+    {
+        if ($this->saleOrderLines->removeElement($saleOrderLine)) {
+            // set the owning side to null (unless already changed)
+            if ($saleOrderLine->getProduct() === $this) {
+                $saleOrderLine->setProduct(null);
+            }
+        }
 
         return $this;
     }

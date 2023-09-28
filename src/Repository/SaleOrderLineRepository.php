@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\SaleOrderLine;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -21,28 +22,15 @@ class SaleOrderLineRepository extends ServiceEntityRepository
         parent::__construct($registry, SaleOrderLine::class);
     }
 
-//    /**
-//     * @return SaleOrderLine[] Returns an array of SaleOrderLine objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('s')
-//            ->andWhere('s.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('s.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
 
-//    public function findOneBySomeField($value): ?SaleOrderLine
-//    {
-//        return $this->createQueryBuilder('s')
-//            ->andWhere('s.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+    public function findAllSaleLinesBetween(DateTime $begin, DateTime $end): array
+      {
+          return $this->createQueryBuilder('s')
+              ->andWhere('s.createdAt BETWEEN :dateBegin and :dateEnd')
+                ->setParameter('dateBegin', $begin->format('Y-m-d').' 00:00:00')
+                ->setParameter('dateEnd',  $end->format('Y-m-d').' 23:59:59')
+              ->getQuery()
+              ->getResult()
+          ;
+      }
 }

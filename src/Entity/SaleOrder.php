@@ -60,6 +60,18 @@ class SaleOrder
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $invoiceNumber = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $totalCost = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $totalPrice = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $trackingUrl = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $carrier = null;
+
     public function __construct()
     {
         $this->saleOrderLines = new ArrayCollection();
@@ -71,6 +83,31 @@ class SaleOrder
     {
         $this->releaseDateString = $this->releaseDate->format('Y-m-d H:i');
     }
+
+    #[ORM\PrePersist()]
+    #[ORM\PreUpdate()]
+    public function recalculateTotal()
+    {
+        $this->totalCost = 0;
+        $this->totalPrice = 0;
+        foreach($this->saleOrderLines as $saleOrderLine) {
+            $this->totalPrice += $saleOrderLine->getTotalPrice();
+            $this->totalCost  += $saleOrderLine->getTotalCost();
+        }
+    }
+
+
+    public function getMargin()
+    {
+        return $this->getTotalPrice() - $this->getTotalCost();
+    }
+
+
+    public function getMarginRate()
+    {
+        return $this->getTotalPrice() == 0 ? '0%' : round(($this->getMargin()/$this->getTotalPrice())*100, 2).'%';
+    }
+
 
 
     public function getLineSequence($lineSequence, $sku)
@@ -196,6 +233,54 @@ class SaleOrder
     public function setInvoiceNumber(?string $invoiceNumber): static
     {
         $this->invoiceNumber = $invoiceNumber;
+
+        return $this;
+    }
+
+    public function getTotalCost(): ?float
+    {
+        return $this->totalCost;
+    }
+
+    public function setTotalCost(?float $totalCost): static
+    {
+        $this->totalCost = $totalCost;
+
+        return $this;
+    }
+
+    public function getTotalPrice(): ?float
+    {
+        return $this->totalPrice;
+    }
+
+    public function setTotalPrice(?float $totalPrice): static
+    {
+        $this->totalPrice = $totalPrice;
+
+        return $this;
+    }
+
+    public function getTrackingUrl(): ?string
+    {
+        return $this->trackingUrl;
+    }
+
+    public function setTrackingUrl(?string $trackingUrl): static
+    {
+        $this->trackingUrl = $trackingUrl;
+
+        return $this;
+    }
+
+    public function getCarrier(): ?string
+    {
+        return $this->carrier;
+    }
+
+    public function setCarrier(?string $carrier): static
+    {
+        $this->carrier = $carrier;
 
         return $this;
     }

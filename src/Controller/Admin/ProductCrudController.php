@@ -23,6 +23,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\PercentField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use function Symfony\Component\String\u;
 use Psr\Log\LoggerInterface;
@@ -77,10 +78,14 @@ class ProductCrudController extends AdminCrudController
             NumberField::new('publicPrice', 'PVP-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
             NumberField::new('resellerPrice', 'PVD-ES')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
             NumberField::new('minimumPrice', 'MINIMOS')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
+           
             FormField::addPanel('Big Buy Price')->setIcon('fas fa-money-bill-alt'),
             NumberField::new('price')->setDisabled(false)->setThousandsSeparator('')->setColumns(4),
             BooleanField::new('forcePrice')->renderAsSwitch(false)->setColumns(4),
-            NumberField::new('finalPriceBigBuy')->hideOnForm(),
+            NumberField::new('finalPriceBigBuy', 'Final price')->hideOnForm(),
+            FormField::addRow(),
+            NumberField::new('margin', 'Margin')->setDisabled(true)->setThousandsSeparator('')->setColumns(3),
+            PercentField::new('marginRate', '%')->setDisabled(true)->setColumns(3),
             BooleanField::new('enabled')->renderAsSwitch(false)->setDisabled(true)->hideOnForm(),
             
             DateTimeField::new('updatedAt')->hideOnForm(),

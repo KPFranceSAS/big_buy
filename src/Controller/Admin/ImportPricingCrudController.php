@@ -69,7 +69,7 @@ class ImportPricingCrudController extends AdminCrudController
                         ->linkToCrudAction('import')
                 )
             ->update(Crud::PAGE_INDEX, Action::DETAIL, function (Action $action) {
-                return $action->setIcon('fa fa-eye')->setLabel("");
+                return $action->setIcon('fa fa-eye')->setLabel("Show");
             });
     }
 
@@ -142,7 +142,7 @@ class ImportPricingCrudController extends AdminCrudController
    
 
 
-    public function confirm(AdminContext $context,  ValidatorInterface $validator)
+    public function confirm(AdminContext $context, ValidatorInterface $validator)
     {
         $import = $context->getEntity()->getInstance();
         if ($import->getStatus() != ImportPricing::Status_Created) {
@@ -213,7 +213,7 @@ class ImportPricingCrudController extends AdminCrudController
     }
 
 
-    private function importPrices(ImportPricing $importPricing,ValidatorInterface $validator)
+    private function importPrices(ImportPricing $importPricing, ValidatorInterface $validator)
     {
         $i = 2;
         $created = 0;

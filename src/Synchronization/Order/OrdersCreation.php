@@ -137,7 +137,7 @@ class OrdersCreation
             'sku'=>$orderBigBuy['sku']
         ]);
 
-        if($saleOrderLineBc){
+        if($saleOrderLineBc) {
             $this->logger->info('Already recorded in Business central');
             return 0;
         }
@@ -178,6 +178,8 @@ class OrdersCreation
         $saleOrderLine->setPrice($priceBigBuy);
         $saleOrderLine->setBigBuyOrderLine($idOrderBigBuy);
             
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['sku'=>$orderBigBuy['sku']]);
+        $saleOrderLine->setProduct($product);
             
         $this->manager->persist($saleOrderLine);
         $this->manager->flush();

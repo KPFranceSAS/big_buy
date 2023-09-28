@@ -107,6 +107,21 @@
             "public/.htaccess"
         ]
     },
+    "symfony/asset-mapper": {
+        "version": "6.3",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.3",
+            "ref": "e8c46ba5e488fc2d7462ab6832559ab93867370a"
+        },
+        "files": [
+            "assets/app.js",
+            "assets/styles/app.css",
+            "config/packages/asset_mapper.yaml",
+            "importmap.php"
+        ]
+    },
     "symfony/console": {
         "version": "6.2",
         "recipe": {
@@ -253,6 +268,15 @@
             "ref": "224aedffb66812dc2b0965dabc14d5f800941da6"
         }
     },
+    "symfony/stimulus-bundle": {
+        "version": "2.12",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "2.8",
+            "ref": "9e33a8a3794b603fb4be6c04ee5ecab901ce549e"
+        }
+    },
     "symfony/translation": {
         "version": "6.2",
         "recipe": {
@@ -290,6 +314,9 @@
         "files": [
             "config/packages/uid.yaml"
         ]
+    },
+    "symfony/ux-chartjs": {
+        "version": "v2.12.0"
     },
     "symfony/ux-live-component": {
         "version": "2.7",

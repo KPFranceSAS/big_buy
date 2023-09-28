@@ -24,7 +24,10 @@ class BrandCrudController extends AdminCrudController
 
     public function getDefautOrder(): array
     {
-        return ["enabled"=> 'DESC', "code"=>'ASC'];
+        return [
+            "enabled"=> 'DESC',
+            "code"=>'ASC'
+        ];
     }
 
 
