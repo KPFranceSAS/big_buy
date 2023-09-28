@@ -23,7 +23,7 @@ class SecurityController extends AbstractController
         ]);
     }
 
-    #[Route(path: "/logout", name: "logout",  methods: ["GET"])]
+    #[Route(path: "/logout", name: "logout", methods: ["GET"])]
     public function logout(): void
     {
         throw new Exception('Don\'t forget to activate logout in security.yaml');

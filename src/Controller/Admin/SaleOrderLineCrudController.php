@@ -2,17 +2,12 @@
 
 namespace App\Controller\Admin;
 
-use App\Entity\SaleOrder;
 use App\Entity\SaleOrderLine;
 use App\Helper\Admin\AdminCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
-use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ArrayField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -29,10 +24,6 @@ class SaleOrderLineCrudController extends AdminCrudController
     {
         return ['createdAt' => "DESC"];
     }
-
-
-  
-
 
 
     public function configureFields(string $pageName): iterable
@@ -67,10 +58,10 @@ class SaleOrderLineCrudController extends AdminCrudController
 
     public function configureActions(Actions $actions): Actions
     {
-    return $actions
-        ->disable(Action::DELETE)
-        ->disable(Action::EDIT)
-        ->disable(Action::NEW);
-}
+        return $actions
+            ->disable(Action::DELETE)
+            ->disable(Action::EDIT)
+            ->disable(Action::NEW);
+    }
 
 }
