@@ -30,6 +30,35 @@ class AkeneoConnector
         );
     }
 
+
+    public function updateProductParent($identifier, $parent, $updateProductValue)
+    {
+        $this->logger->info('Update child '.$identifier.' '.json_encode($updateProductValue));
+        $this->updateProduct($identifier, ['values' => $updateProductValue]);
+        if ($parent) {
+            $this->logger->info('Update parent '.$parent.' '.json_encode($updateProductValue));
+            $parentPim = $this->getParent($parent);
+            $this->updateParent($parent, ['values' => $updateProductValue]);
+            if($parentPim['parent']) {
+                $this->logger->info('Update grand paren '.$parentPim['parent'].' '.json_encode($updateProductValue));
+                $this->updateParent($parentPim['parent'], ['values' => $updateProductValue]);
+            }
+        }
+    }
+
+
+    public function getParent($identifier): array
+    {
+        return $this->client->getProductModelApi()->get($identifier);
+    }
+
+    public function updateParent($identifier, $values): int
+    {
+        return $this->client->getProductModelApi()->upsert($identifier, $values);
+    }
+
+
+
     public function getFamily($family)
     {
         return $this->client->getFamilyApi()->get($family);

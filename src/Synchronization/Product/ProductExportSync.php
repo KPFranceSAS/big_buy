@@ -329,18 +329,7 @@ class ProductExportSync
             ->addFilter('brand', 'IN', [$brand])
             ->addFilter('enabled', '=', true);
 
-        return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
-    }
-
-
-    public function getProductsEnabledOnChannel()
-    {
-        $searchBuilder = new SearchBuilder();
-        $searchBuilder
-            ->addFilter('brand', 'IN', ['xiaomi', 'aiper', 'victrola', 'roborock', 'xgimi'])
-            ->addFilter('enabled', '=', true);
-
-        return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
+        return $this->akeneoConnector->searchProducts($searchBuilder);
     }
 
 
