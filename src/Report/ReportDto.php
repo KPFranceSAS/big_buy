@@ -384,7 +384,7 @@ class ReportDto
     
     public function getWeeklyMarginRateProgress()
     {
-        return $this->calculateMarginRate($this->getPastWeeklyMarginRate(), $this->getWeeklyMarginRate());
+        return $this->calculatePercentage($this->getPastWeeklyMarginRate(), $this->getWeeklyMarginRate());
     }
 
 
