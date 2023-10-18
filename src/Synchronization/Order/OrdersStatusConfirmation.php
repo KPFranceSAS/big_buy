@@ -3,6 +3,7 @@
 namespace App\Synchronization\Order;
 
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
+use App\Entity\Product;
 use App\Entity\SaleOrder;
 use App\Mailer\SendEmail;
 use DateTime;
@@ -41,15 +42,24 @@ class OrdersStatusConfirmation
 
                 $csv = Writer::createFromString();
                 $csv->setDelimiter(';');
-                $csv->insertOne(['order_big_buy_id','delivery_note_number', 'sku', 'price','quantity', 'date']);
+                $csv->insertOne(['order_big_buy_id','delivery_note_number', 'sku', 'price','quantity', 'date', 'canon_digital']);
                 foreach($shipmentBc['salesShipmentLines'] as $salesShipmentLine) {
                     if(in_array($salesShipmentLine['type'], ['Item', 'Producto'])) {
                         $lines = $saleOrder->getAllLinesSequenceAndSku($salesShipmentLine["lineNo"], $salesShipmentLine['no']);
                         if(count($lines)>0) {
+                            $productDb = $this->manager->getRepository(Product::class)->findOneBySku($salesShipmentLine['no']);
 
+                            
                             $qtySend = $salesShipmentLine['quantity'];
                             foreach($lines as $line) {
-                                $csv->insertOne([$line->getBigBuyOrderLine(), $shipmentBc['number'], $salesShipmentLine['no'], $line->getPrice()*$line->getQuantity(),$line->getQuantity(),date('Y-m-d')]);
+                                if($productDb->getCanonDigital()) {
+                                    $canonDigital = $productDb->getCanonDigital()*$line->getQuantity();
+                                } else {
+                                    $canonDigital = 0;
+                                }
+
+
+                                $csv->insertOne([$line->getBigBuyOrderLine(), $shipmentBc['number'], $salesShipmentLine['no'], $line->getPrice()*$line->getQuantity(),$line->getQuantity(),date('Y-m-d'), $canonDigital]);
                                 $qtySend=$qtySend - $line->getQuantity();
                                 $idLines[] = $line->getId();
                             }
