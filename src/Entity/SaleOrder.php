@@ -17,6 +17,9 @@ use Doctrine\ORM\Mapping as ORM;
 class SaleOrder
 {
 
+    public const STATUS_ERROR_CONFIRMED = -1;
+
+
     public const STATUS_OPEN = 1;
 
     public const STATUS_WAITING_RELEASE = 2;
@@ -119,6 +122,37 @@ class SaleOrder
         }
         return null;
     }
+
+
+    public function getAllLinesSequenceAndSku($lineSequence, $sku)
+    {
+        $saleLines = [];
+
+        foreach($this->saleOrderLines as $saleOrderLine) {
+            if($saleOrderLine->getLineNumber()==$lineSequence && $sku == $saleOrderLine->getSku()) {
+                $saleLines[]= $saleOrderLine;
+            }
+        }
+        return $saleLines;
+    }
+
+
+
+
+
+    public function getLineSequenceForSkuPrice($sku, $price)
+    {
+        foreach($this->saleOrderLines as $saleOrderLine) {
+            if($saleOrderLine->getPrice()==$price && $sku == $saleOrderLine->getSku()) {
+                return $saleOrderLine->getLineNumber();
+            }
+        }
+        return null;
+    }
+
+
+
+
 
     public function getArrivalTime(): DateTime
     {

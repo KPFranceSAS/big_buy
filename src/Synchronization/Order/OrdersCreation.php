@@ -119,7 +119,7 @@ class OrdersCreation
             
             
         } catch (Exception $e) {
-            $this->sendEmail->sendAlert('Error OrdersCreation line 105', $e->getMessage());
+            $this->sendEmail->sendAlert('Error OrdersCreation', $e->getMessage().'<br/>'.$e->getTraceAsString());
             $saleOrder->addError('Error '.$e->getMessage());
         }
         $this->manager->flush();
@@ -144,15 +144,29 @@ class OrdersCreation
 
 
         $priceBigBuy = floatval($orderBigBuy['price']);
-        $saleOrderLineBc = new SaleOrderLineBc();
         $itemBc = $this->bcConnector->getItemByNumber($orderBigBuy['sku']);
-        $saleOrderLineBc->itemId = $itemBc['id'];
-        $saleOrderLineBc->quantity = (int)$orderBigBuy['quantity'];
-        $saleOrderLineBc->lineType = "Item";
-        $saleOrderLineBc->unitPrice =$priceBigBuy;
 
-        $saleOrderLineBcCreated = $this->bcConnector->createSaleOrderLine($saleOrderBc['id'], $saleOrderLineBc->transformToArray());
-        $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));
+        $lineNumber = $saleOrder->getLineSequenceForSkuPrice($orderBigBuy['sku'], $priceBigBuy);
+
+        if($lineNumber) {
+            $saleOrderLineToUpdate = $this->bcConnector->getSaleOrderLineByLineNumber($saleOrderBc['id'], $lineNumber);
+            $nvQuantity = $saleOrderLineToUpdate['quantity'] + (int)$orderBigBuy['quantity'];
+            $saleOrderLineBcCreated = $this->bcConnector->updateSaleOrderLine($saleOrderBc['id'], $saleOrderLineToUpdate['id'], '*', ['quantity'=>$nvQuantity]);
+            $saleOrder->addLog('Updated sale order line in BC quantity > '.$saleOrderLineToUpdate['quantity'].' to '.$nvQuantity);
+            $saleOrderLineBcCreated = $this->bcConnector->updateSaleOrderLine($saleOrderBc['id'], $saleOrderLineToUpdate['id'], '*', ['unitPrice'=> $priceBigBuy]);
+            $saleOrder->addLog('Updated sale order line in BC price > '.$priceBigBuy);
+        } else {
+            $saleOrderLineBc = new SaleOrderLineBc();
+            
+            $saleOrderLineBc->itemId = $itemBc['id'];
+            $saleOrderLineBc->quantity = (int)$orderBigBuy['quantity'];
+            $saleOrderLineBc->lineType = "Item";
+            $saleOrderLineBc->unitPrice =$priceBigBuy;
+    
+            $saleOrderLineBcCreated = $this->bcConnector->createSaleOrderLine($saleOrderBc['id'], $saleOrderLineBc->transformToArray());
+            $saleOrder->addLog('Created sale order line in BC '. json_encode($saleOrderLineBc->transformToArray()));
+            $lineNumber = $saleOrderLineBcCreated['sequence'];
+        }
 
 
         $reservation = [
@@ -161,11 +175,11 @@ class OrdersCreation
             "ItemNo" => $orderBigBuy['sku'],
             "LocationCode" =>  $saleOrderBc['locationCode'],
             "SourceID" => $saleOrder->getOrderNumber(),
-            "SourceRefNo"=> $saleOrderLineBcCreated['sequence'],
+            "SourceRefNo"=> $lineNumber,
         ];
 
         $this->bcConnector->createReservation($reservation);
-        $saleOrder->addLog('Add reservation for line '.$saleOrderLineBcCreated['sequence'].' for '.$saleOrderLineBcCreated['quantity'].' '.$saleOrderLineBcCreated['lineDetails']['number']);
+        $saleOrder->addLog('Add reservation for line '.$lineNumber.' for '.$orderBigBuy['quantity'].' '.$orderBigBuy['sku']);
 
         
         $saleOrderLine = new SaleOrderLine();
@@ -174,7 +188,7 @@ class OrdersCreation
         $saleOrderLine->setSku($orderBigBuy['sku']);
         $saleOrderLine->setName($itemBc['displayName']);
         $saleOrderLine->setUnitCost($itemBc['unitCost']);
-        $saleOrderLine->setLineNumber($saleOrderLineBcCreated['sequence']);
+        $saleOrderLine->setLineNumber($lineNumber);
         $saleOrderLine->setPrice($priceBigBuy);
         $saleOrderLine->setBigBuyOrderLine($idOrderBigBuy);
             

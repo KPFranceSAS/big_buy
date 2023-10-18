@@ -677,6 +677,19 @@ abstract class BusinessCentralConnector
     }
 
 
+    public function getSaleOrderLineByLineNumber(string $id, $lineSequence): ?array
+    {
+        return $this->getElementsByArray(
+            self::EP_SALES_ORDERS.'('.$id.')/'.self::EP_SALES_ORDERS_LINE,
+            'sequence eq '.$lineSequence,
+            false
+        );
+    }
+
+
+
+    
+
 
 
     public function getFullSaleOrder(string $id): ?array
