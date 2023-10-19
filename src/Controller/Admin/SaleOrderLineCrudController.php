@@ -65,6 +65,7 @@ class SaleOrderLineCrudController extends AdminCrudController
         
         return $filters
             ->add(ChoiceFilter::new('status')->canSelectMultiple(true)->setChoices($choiceStatuts))
+            ->add('saleOrder')
             ->add('sku')
             ->add('bigBuyOrderLine')
             ->add('shipmentNumber')

@@ -82,6 +82,11 @@ class SaleOrder
         $this->saleOrderLines = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->orderNumber;
+    }
+
 
     #[ORM\PrePersist()]
     public function setDateReleaseFormat(): void
