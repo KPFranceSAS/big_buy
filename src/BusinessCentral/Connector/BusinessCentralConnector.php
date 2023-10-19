@@ -729,6 +729,17 @@ abstract class BusinessCentralConnector
     }
 
 
+
+    public function getStatusOrderLineByOrderNumber(string $orderNumber, $sequence): ?array
+    {
+        return $this->getElementsByArray(
+            'statusOrderLines',
+            "number eq '$orderNumber' and customerNumber eq '$sequence'",
+            false
+        );
+    }
+
+
     public function getSaleOrder(string $id): ?array
     {
         return $this->getElementById(self::EP_SALES_ORDERS, $id);
@@ -786,6 +797,17 @@ abstract class BusinessCentralConnector
             'salesInvoices',
             $number,
             'orderNumber',
+            ['$expand' => 'salesInvoiceLines']
+        );
+    }
+
+
+    public function getSaleInvoiceByNumber(string $number): ?array
+    {
+        return $this->getElementByNumber(
+            'salesInvoices',
+            $number,
+            'number',
             ['$expand' => 'salesInvoiceLines']
         );
     }

@@ -5,6 +5,7 @@ namespace App\Synchronization\Order;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Entity\Product;
 use App\Entity\SaleOrder;
+use App\Entity\SaleOrderLine;
 use App\Mailer\SendEmail;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
@@ -38,8 +39,11 @@ class OrdersRelease
                     $this->bcConnector->updateSaleOrder($saleOrderBc['id'], '*', ['pendingToShip'=>false]);
                     $saleOrder->addLog('Marked sale order to be released');
                     $saleOrder->setStatus(SaleOrder::STATUS_WAITING_RELEASE);
+                    
+                    foreach($saleOrder->getSaleOrderLines() as $saleOrderLine) {
+                        $saleOrderLine->setStatus(SaleOrderLine::STATUS_WAITING_RELEASE);
+                    }
                     $this->manager->flush();
-                                                           
                 }
             } catch (Exception $e) {
                 $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());

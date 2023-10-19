@@ -99,6 +99,19 @@ class SaleOrder
         }
     }
 
+    public function updateStatus()
+    {
+        $statusLine = [];
+        foreach($this->saleOrderLines as $saleOrderLine){
+            if(!in_array($saleOrderLine->getStatus(), $statusLine)){
+                $statusLine[]= $saleOrderLine->getStatus();                            
+            }
+        }
+        if(count($statusLine)==1){
+            $this->status = $statusLine[0];
+        }
+    }
+    
 
     public function getMargin()
     {

@@ -49,22 +49,56 @@ class SaleOrderLine
     #[ORM\ManyToOne(inversedBy: 'saleOrderLines')]
     private ?Product $product = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $status = self::STATUS_OPEN;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $shipmentNumber = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $invoiceNumber = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $shipmentCompany = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $trackingNumber = null;
+
+
+    public const STATUS_OPEN = 1;
+
+    public const STATUS_WAITING_RELEASE = 2;
+
+    public const STATUS_RELEASED = 3;
+
+    public const STATUS_SENT_BY_WAREHOUSE = 4;
+
+    public const STATUS_CONFIRMED = 5;
+
+    public const STATUS_INVOICED = 6;
+
+    public const STATUS_CANCELLED = 6;
+
+
     public function getId(): ?int
     {
         return $this->id;
     }
 
 
-    public function getOrderStatus(){
+    public function getOrderStatus()
+    {
         return $this->saleOrder->getStatus();
     }
 
 
-    public function getOrderNumber(){
+    public function getOrderNumber()
+    {
         return $this->saleOrder->getOrderNumber();
     }
 
-    public function getReleaseDate(){
+    public function getReleaseDate()
+    {
         return $this->saleOrder->getReleaseDate();
     }
     
@@ -204,6 +238,66 @@ class SaleOrderLine
     public function getMarginRate()
     {
         return round(($this->getMargin()/$this->getTotalPrice())*100, 2).'%';
+    }
+
+    public function getStatus(): ?int
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?int $status): static
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getShipmentNumber(): ?string
+    {
+        return $this->shipmentNumber;
+    }
+
+    public function setShipmentNumber(?string $shipmentNumber): static
+    {
+        $this->shipmentNumber = $shipmentNumber;
+
+        return $this;
+    }
+
+    public function getInvoiceNumber(): ?string
+    {
+        return $this->invoiceNumber;
+    }
+
+    public function setInvoiceNumber(?string $invoiceNumber): static
+    {
+        $this->invoiceNumber = $invoiceNumber;
+
+        return $this;
+    }
+
+    public function getShipmentCompany(): ?string
+    {
+        return $this->shipmentCompany;
+    }
+
+    public function setShipmentCompany(?string $shipmentCompany): static
+    {
+        $this->shipmentCompany = $shipmentCompany;
+
+        return $this;
+    }
+
+    public function getTrackingNumber(): ?string
+    {
+        return $this->trackingNumber;
+    }
+
+    public function setTrackingNumber(?string $trackingNumber): static
+    {
+        $this->trackingNumber = $trackingNumber;
+
+        return $this;
     }
 
 

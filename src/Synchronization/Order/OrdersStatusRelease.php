@@ -5,6 +5,7 @@ namespace App\Synchronization\Order;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Entity\Product;
 use App\Entity\SaleOrder;
+use App\Entity\SaleOrderLine;
 use App\Mailer\SendEmail;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
@@ -48,14 +49,12 @@ class OrdersStatusRelease
                 } else {
                     $saleOrder->addLog('Sale order has been released. Waiting for shipment', 'info');
                     $saleOrder->setStatus(SaleOrder::STATUS_RELEASED);
+                    foreach($saleOrder->getSaleOrderLines() as $saleOrderLine) {
+                        $saleOrderLine->setStatus(SaleOrderLine::STATUS_RELEASED);
+                    }
+                    $this->manager->flush();
                 }
                 $this->manager->flush();
-
-
-                               
-
-
-
             } catch (Exception $e) {
                 $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
                 $this->sendEmail->sendAlert('Error OrdersStatusRelease ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());

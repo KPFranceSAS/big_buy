@@ -3,7 +3,7 @@
 namespace App\Synchronization\Order;
 
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
-use App\Entity\SaleOrder;
+use App\Entity\SaleOrderLine;
 use App\Mailer\SendEmail;
 use DateTime;
 use Doctrine\Persistence\ManagerRegistry;
@@ -27,35 +27,29 @@ class OrdersStatusSent
     
     public function synchronize()
     {
-        $saleOrders = $this->manager->getRepository(SaleOrder::class)->findBy(['status'=>SaleOrder::STATUS_RELEASED]);
-        $datenow = new DateTime();
-       
-        foreach($saleOrders as $saleOrder) {
+        $saleOrderLines = $this->manager->getRepository(SaleOrderLine::class)->findBy(['status'=>SaleOrderLine::STATUS_RELEASED]);
+        foreach($saleOrderLines as $saleOrderLine) {
             try {
-                $this->logger->info('Check sale order has been sent '.$saleOrder->getOrderNumber());
-                if(!$this->isSaleOrderSent($saleOrder->getOrderNumber())) {
-                    $nbMinutesSinceRelease = $this->getMinutesDifference($saleOrder->getReleaseDate(), $datenow);
-                    $this->logger->info('Sale order has been marked to be sent '.$nbMinutesSinceRelease.' minutes ago');
-                    if($nbMinutesSinceRelease > 720) {
-                        $log = 'Sale order '.$saleOrder->getOrderNumber().' is not sent by warehouse. It should be received in Valencia '.$saleOrder->getArrivalTime()->format('d/m/Y H:i');
-                        if($saleOrder->haveNoLogWithMessage($log)) {
-                            $saleOrder->addLog($log, 'error');
-                            $this->logger->critical($log);
-                            $this->sendEmail->sendEmail(['devops@kpsport.com', 'administracion@kpsport.com'], 'Pending shipment order '.$saleOrder->getOrderNumber(), $log);
-                        }
-                    }
-                } else {
-                    $saleOrder->addLog('Sale order has been sent', 'info');
-                    $saleOrder->setStatus(SaleOrder::STATUS_SENT_BY_WAREHOUSE);
-                    $shipmentBc = $this->bcConnector->getSaleShipmentByOrderNumber($saleOrder->getOrderNumber());
-                    $saleOrder->setShipmentNumber($shipmentBc['number']);
+                $this->logger->info('Check sale order '.$saleOrderLine->getOrderNumber().' //  '.$saleOrderLine->getLineNumber().' has been sent '.$saleOrderLine->getOrderNumber());
+                $shipmentInfo =  $this->isSaleOrderLineSent($saleOrderLine->getOrderNumber(), $saleOrderLine->getLineNumber());
+                
+                if($shipmentInfo) {
+                    $saleOrderLine->addLog('Sale order Line'.$saleOrderLine->getBigBuyOrderLine().' has been sent', 'info');
+                    $saleOrderLine->setStatus(SaleOrderLine::STATUS_SENT_BY_WAREHOUSE);
+                    $saleOrderLine->setShipmentNumber($shipmentInfo['ShipmentNo']);
+                    $saleOrderLine->setInvoiceNumber($shipmentInfo['InvoiceNo']);
+                    $saleOrderLine->setShipmentCompany($shipmentInfo['shipmentCompany']);
+                    $saleOrderLine->setTrackingNumber($shipmentInfo['trackingNumber']);
                 }
+                    
             } catch (Exception $e) {
                 $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
                 $this->sendEmail->sendAlert('Error OrdersStatusSent ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
             }
-            $this->manager->flush();
+            $saleOrderLine->getSaleOrder()->updateStatus();
         }
+
+        $this->manager->flush();
     }
 
 
@@ -69,25 +63,42 @@ class OrdersStatusSent
     }
 
 
+    protected $statuses=[];
 
-    protected function isSaleOrderSent($orderNumber)
+
+
+    protected function isSaleOrderLineSent($orderNumber, $sequence)
     {
-        $status =  $this->bcConnector->getStatusOrderByNumber($orderNumber);
-        if ($status) {
-            $this->logger->info("Status found by reference to the order number " . $orderNumber);
-            $statusSaleOrder =  reset($status['statusOrderLines']);
-            if (in_array($statusSaleOrder['statusCode'], ["3", "4"])) {
-                $this->logger->info("Sale order is sent " . $orderNumber);
-                return true ;
+
+        if(!array_key_exists($orderNumber, $this->statuses)){
+            $status =  $this->bcConnector->getStatusOrderByNumber($orderNumber);
+            if (!$status) {
+                $this->logger->info("Status not found for moment " . $orderNumber);
+                return null;
             } else {
-                $this->logger->info("Sale order is not  released " . $orderNumber);
-                return false ;
+                $this->logger->info("Status found by reference to the order number " . $orderNumber);
+                $this->statuses[$orderNumber]=$status;
             }
+        } 
+
+
+        foreach($this->statuses[$orderNumber]['statusOrderLines'] as $statutOrderline){
+            if((int)$sequence == $statutOrderline['sequence']){
+                if (in_array($statutOrderline['statusCode'], ["3", "4"]) && (int)$sequence == $statutOrderline['sequence']) {
+                    $this->logger->info("Sale order is sent " . $orderNumber);
+                    return $statutOrderline;
+                }
+            }
+            
         }
-        $this->logger->info("Status not found for moment " . $orderNumber);
-        return false;
+
+        $this->logger->info("Sequence $sequence not found in " . $orderNumber);
+        return null;
     }
     
+
+
+
        
 
 }

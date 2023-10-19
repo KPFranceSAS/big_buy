@@ -96,6 +96,10 @@ class Product
     }
 
 
+    public function getVatRate(){
+        return $this->getVatCode() == 'VAT21' ? 21 : 0;
+    }
+
 
     public function getMargin()
     {
