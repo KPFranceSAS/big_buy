@@ -57,8 +57,6 @@ class OrdersStatusConfirmation
                                 } else {
                                     $canonDigital = 0;
                                 }
-
-
                                 $csv->insertOne([$line->getBigBuyOrderLine(), $shipmentBc['number'], $salesShipmentLine['no'], $line->getPrice()*$line->getQuantity(),$line->getQuantity(),date('Y-m-d'), $canonDigital]);
                                 $qtySend=$qtySend - $line->getQuantity();
                                 $idLines[] = $line->getId();

@@ -119,8 +119,10 @@ class OrdersCreation
             
             
         } catch (Exception $e) {
-            $this->sendEmail->sendAlert('Error OrdersCreation', $e->getMessage().'<br/>'.$e->getTraceAsString());
-            $saleOrder->addError('Error '.$e->getMessage());
+            $message = mb_convert_encoding($e->getMessage(), "UTF-8", "UTF-8");
+
+            $this->sendEmail->sendAlert('Error OrdersCreation', $message.'<br/>'.$e->getTraceAsString());
+            $saleOrder->addError('Error '.$message);
         }
         $this->manager->flush();
         return count($saleLinesArrayToIntegrate)>0;
@@ -144,6 +146,14 @@ class OrdersCreation
 
 
         $priceBigBuy = floatval($orderBigBuy['price']);
+        $product = $this->manager->getRepository(Product::class)->findOneBy(['sku'=>$orderBigBuy['sku']]);
+        if($product->getCanonDigital()) {
+            
+            $priceBigBuy = $priceBigBuy - $product->getCanonDigital();
+            $saleOrder->addLog('Product '.$orderBigBuy['sku'].' has canon digital price should be  '.$priceBigBuy.' instead of '.floatval($orderBigBuy['price']));
+        }
+
+
         $itemBc = $this->bcConnector->getItemByNumber($orderBigBuy['sku']);
 
         $lineNumber = $saleOrder->getLineSequenceForSkuPrice($orderBigBuy['sku'], $priceBigBuy);

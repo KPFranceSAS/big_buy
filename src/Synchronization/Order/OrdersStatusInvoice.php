@@ -44,11 +44,11 @@ class OrdersStatusInvoice
                     $csv->setDelimiter(';');
                     $csv->insertOne(['invoice_number','delivery_note_number','sku','price','tax','digital_canon','eco_tax','quantity','type','date']);
                     foreach($invoiceBc['salesInvoiceLines'] as $salesInvoiceLine) {
-                        if(in_array($salesInvoiceLine['lineType'], ['Item', 'Producto'])) {
+                        if(in_array($salesInvoiceLine['lineType'], ['Item', 'Producto'])&& $salesInvoiceLine['quantity']>0) {
                             $sku = $salesInvoiceLine['lineDetails']['number'];
                             $productDb = $this->manager->getRepository(Product::class)->findOneBySku($sku);
 
-                            if($productDb->getCanonDigital()){
+                            if($productDb->getCanonDigital()) {
                                 $canonDigital = $productDb->getCanonDigital()*$salesInvoiceLine['quantity'];
                                 $netTaxAmount = $salesInvoiceLine['netTaxAmount'] + $canonDigital*0.21;
                             } else {
@@ -61,13 +61,16 @@ class OrdersStatusInvoice
                                 $saleOrder->getShipmentNumber(),
                                 $sku,
                                 $salesInvoiceLine['netAmount'],
-                                round($netTaxAmount,2),
+                                round($netTaxAmount, 2),
                                 $canonDigital,
                                0,
                                $salesInvoiceLine['quantity'],
                                'type_product',
                                $invoiceBc['invoiceDate']
                             ]);
+                            
+
+                           
                         }
                     }
             

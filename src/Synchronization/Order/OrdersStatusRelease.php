@@ -52,46 +52,7 @@ class OrdersStatusRelease
                 $this->manager->flush();
 
 
-                if($saleOrder->getStatus()==SaleOrder::STATUS_RELEASED) {
-                    $ordersGather = [];
-                    foreach($saleOrder->getSaleOrderLines() as $saleOrderLine) {
-                        if(!array_key_exists($saleOrderLine->getSku(), $ordersGather)) {
-                            $product = $this->manager->getRepository(Product::class)->findOneBySku($saleOrderLine->getSku());
-                            $ordersGather[$saleOrderLine->getSku()] = [
-                                'sku'=> $saleOrderLine->getSku(),
-                                'qty'=>0,
-                                 "name"=>$product->getNameErp()
-                            ];
-                        }
-                        $ordersGather[$saleOrderLine->getSku()]['qty'] = $ordersGather[$saleOrderLine->getSku()]['qty']+$saleOrderLine->getQuantity();
-                    }
-
-                    $content= '<p>The sale order '.$saleOrder->getOrderNumber().' is ready to be picekd up</p>';
-                    $content.= '<p>Here the skus and quantities gathered</p>';
-                    $content.='<table width="100%" cellpadding="0" cellspacing="0" style="min-width:100%;  border-collapse: collapse; border-style: solid; border-color: # aeabab;" border="1px">';
-                    $content.='<tr>';
-                    $content.='<td style="padding:5px; border: 1px solid #aeabab;" align="left"><strong>Sku</strong></td>';
-                    $content.='<td style="padding:5px; border: 1px solid #aeabab;" align="left"><strong>Name</strong></td>';
-                    $content.='<td style="padding:5px; border: 1px solid #aeabab;" align="left"><strong>Qty</strong></td>';
-                    $content.='</tr>';
-                    foreach($ordersGather as $orderGather) {
-                        $content.='<tr>';
-                        $content.='<td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $orderGather['sku'].'</td>';
-                        $content.='<td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $orderGather['name'].'</td>';
-                        $content.='<td style="padding:5px; border: 1px solid #aeabab;" align="left">'. $orderGather['qty'].'</td>';
-                        $content.='</tr>';
-                    }
-                    $content.='</table>';
-
-                    $this->sendEmail->sendEmail(
-                        ['logistica@logisticacel.com', 'devops@kpsport.com'],
-                        'Order content '.$saleOrder->getOrderNumber(),
-                        $content
-                    );
-                    $saleOrder->addLog('Sent emails to logistica@logisticacel.com to describe content');
-                    $this->manager->flush();
-                }
-                
+                               
 
 
 
