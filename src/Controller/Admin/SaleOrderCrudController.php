@@ -38,8 +38,7 @@ class SaleOrderCrudController extends AdminCrudController
         return [
             FormField::addTab('General')->setIcon('fas fa-shopping-cart'),
             TextField::new('orderNumber'),
-            TextField::new('shipmentNumber'),
-            TextField::new('invoiceNumber'),
+
             DateTimeField::new('createdAt'),
             DateTimeField::new('updatedAt'),
             DateTimeField::new('releaseDate'),

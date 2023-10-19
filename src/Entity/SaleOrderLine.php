@@ -77,7 +77,7 @@ class SaleOrderLine
 
     public const STATUS_INVOICED = 6;
 
-    public const STATUS_CANCELLED = 6;
+    public const STATUS_CANCELLED = 7;
 
 
     public function getId(): ?int

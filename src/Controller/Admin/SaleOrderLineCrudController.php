@@ -11,6 +11,7 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Filter\ChoiceFilter;
 
 class SaleOrderLineCrudController extends AdminCrudController
 {
@@ -32,6 +33,8 @@ class SaleOrderLineCrudController extends AdminCrudController
             TextField::new('sku'),
             TextField::new('name'),
             TextField::new('orderNumber'),
+            TextField::new('shipmentNumber'),
+            TextField::new('invoiceNumber'),
             TextField::new('bigBuyOrderLine'),
             DateTimeField::new('createdAt'),
             DateTimeField::new('releaseDate'),
@@ -48,9 +51,24 @@ class SaleOrderLineCrudController extends AdminCrudController
 
     public function configureFilters(Filters $filters): Filters
     {
+
+        $choiceStatuts = [
+            'Open' => SaleOrderLine::STATUS_OPEN,
+            'Waiting release'  => SaleOrderLine::STATUS_WAITING_RELEASE,
+            'Released / waiting shipment' => SaleOrderLine::STATUS_RELEASED,
+            'Picked and posted' => SaleOrderLine::STATUS_SENT_BY_WAREHOUSE,
+            'Delivery confirmed' => SaleOrderLine::STATUS_CONFIRMED,
+            'Invoice sent' => SaleOrderLine::STATUS_INVOICED,
+            'Cancelled' => SaleOrderLine::STATUS_CANCELLED,
+        ];
+
+        
         return $filters
+            ->add(ChoiceFilter::new('status')->canSelectMultiple(true)->setChoices($choiceStatuts))
             ->add('sku')
             ->add('bigBuyOrderLine')
+            ->add('shipmentNumber')
+            ->add('invoiceNumber')
         ;
     }
 
