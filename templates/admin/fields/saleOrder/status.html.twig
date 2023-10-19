@@ -22,6 +22,10 @@
     <span class="badge badge-success">
 		Invoice sent
 	</span>
+{% elseif  entity.instance.status == 7 %}
+    <span class="badge badge-default">
+		Mixed
+	</span>
 {% else %}	
 	<span class="badge badge-default">
 		Unknown ({{entity.instance.status}})

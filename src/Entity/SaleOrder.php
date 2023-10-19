@@ -32,6 +32,8 @@ class SaleOrder
 
     public const STATUS_INVOICED = 6;
 
+    public const STATUS_MIXED = 7;
+
 
     use TraitTimeUpdated;
 

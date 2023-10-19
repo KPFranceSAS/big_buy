@@ -26,10 +26,39 @@
                         <td data-label="Quantity" class="text-left field-text">{{saleLine.quantity}}</td>
                         <td data-label="Price" class="text-left field-text">{{saleLine.price}}</td>
                         <td data-label="Total Price" class="text-left field-text">{{saleLine.totalPrice}}</td>
-                        <td data-label="Cost" class="text-left field-text">{{saleLine.unitCost}}</td>
-                        <td data-label="Total Cost" class="text-left field-text">{{saleLine.totalCost}}</td>
                         <td data-label="Margin" class="text-left field-text">{{saleLine.margin}}</td>
                         <td data-label="Margin rate" class="text-left field-text">{{saleLine.marginRate}}</td>
+                        <td data-label="Status" class="text-left field-text">
+                            {% if  saleLine.status == 1 %}
+    <span class="badge badge-info">
+		Open
+	</span>
+{% elseif  saleLine.status == 2 %}
+    <span class="badge badge-warning">
+		Waiting release
+	</span>
+{% elseif  saleLine.status == 3 %}
+    <span class="badge badge-warning">
+		Released / waiting shipment
+	</span>
+{% elseif  saleLine.status == 4 %}
+    <span class="badge badge-success">
+		Picked and posted
+	</span>
+{% elseif  saleLine.status == 5 %}
+    <span class="badge badge-success">
+		Delivery confirmed
+	</span>
+{% elseif  saleLine.status == 6 %}
+    <span class="badge badge-success">
+		Invoice sent
+	</span>
+{% else %}	
+	<span class="badge badge-default">
+		Unknown ({{entity.instance.saleOrder.status}})
+	</span>
+{% endif %}
+                        </td>
                         <td data-label="Big Buy order id" class="text-left field-text">{{saleLine.bigBuyOrderLine}}</td>
                         <td data-label="Created at" class="text-left field-text">{{saleLine.createdAt|date('Y-m-d H:i')}}</td>
                     </tr>

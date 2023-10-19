@@ -1,24 +1,24 @@
-{% if  entity.instance.saleOrder.status == 1 %}
+{% if  entity.instance.status == 1 %}
     <span class="badge badge-info">
 		Open
 	</span>
-{% elseif  entity.instance.saleOrder.status == 2 %}
+{% elseif  entity.instance.status == 2 %}
     <span class="badge badge-warning">
 		Waiting release
 	</span>
-{% elseif  entity.instance.saleOrder.status == 3 %}
+{% elseif  entity.instance.status == 3 %}
     <span class="badge badge-warning">
 		Released / waiting shipment
 	</span>
-{% elseif  entity.instance.saleOrder.status == 4 %}
+{% elseif  entity.instance.status == 4 %}
     <span class="badge badge-success">
 		Picked and posted
 	</span>
-{% elseif  entity.instance.saleOrder.status == 5 %}
+{% elseif  entity.instance.status == 5 %}
     <span class="badge badge-success">
 		Delivery confirmed
 	</span>
-{% elseif  entity.instance.saleOrder.status == 6 %}
+{% elseif  entity.instance.status == 6 %}
     <span class="badge badge-success">
 		Invoice sent
 	</span>
