@@ -111,6 +111,8 @@ class SaleOrder
         }
         if(count($statusLine)==1){
             $this->status = $statusLine[0];
+        } else {
+            $this->status = self::STATUS_MIXED;
         }
     }
     
