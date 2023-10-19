@@ -46,48 +46,35 @@ class OrdersStatusInvoice
                     }
                     if($invoices[$saleOrderLine->getInvoiceNumber()]) {
                         $saleOrderLine->addLog('Confirmed invoice');
-                        
-                        foreach($invoices[$saleOrderLine->getInvoiceNumber()]['salesInvoiceLines'] as $salesInvoiceLine) {
-                            if(in_array($salesInvoiceLine['lineType'], ['Item', 'Producto']) 
-                                    && $salesInvoiceLine['sequence']==(int)$saleOrderLine->getLineNumber()
-                                    && $salesInvoiceLine['quantity']>0
-                                    ) {
-                               
-                                $productDb = $saleOrderLine->getProduct();
+                        $productDb = $saleOrderLine->getProduct();
     
-                                if($productDb->getCanonDigital()) {
-                                    $canonDigital = $productDb->getCanonDigital()*$salesInvoiceLine['quantity'];
-                                } else {
-                                    $canonDigital = 0;
-                                }
-
-                                
-    
-                                $csv->insertOne([
-                                    $invoices[$saleOrderLine->getInvoiceNumber()]["number"],
-                                    $saleOrderLine->getShipmentNumber(),
-                                    $saleOrderLine->getSku(),
-                                    $salesInvoiceLine['netAmount'],
-                                    $productDb->getVatRate(),
-                                    $canonDigital,
-                                   0,
-                                   $salesInvoiceLine['quantity'],
-                                   'type_product',
-                                   $invoices[$saleOrderLine->getInvoiceNumber()]['invoiceDate']
-                                ]);
-                                
-    
-                                $saleOrderLine->setStatus(SaleOrderLine::STATUS_INVOICED);
-                                $saleOrderLine->getSaleOrder()->updateStatus();
-                            }
+                        if($productDb->getCanonDigital()) {
+                            $canonDigital = $productDb->getCanonDigital()*$saleOrderLine->getQuantity();
+                        } else {
+                            $canonDigital = 0;
                         }
-                
+
                         
+
+                        $csv->insertOne([
+                            $invoices[$saleOrderLine->getInvoiceNumber()]["number"],
+                            $saleOrderLine->getShipmentNumber(),
+                            $saleOrderLine->getSku(),
+                            $saleOrderLine->getPrice()*$saleOrderLine->getQuantity(),
+                            $productDb->getVatRate(),
+                            $canonDigital,
+                            0,
+                            $saleOrderLine->getQuantity(),
+                            'type_product',
+                            $invoices[$saleOrderLine->getInvoiceNumber()]['invoiceDate']
+                        ]);
+                        
+
+                        $saleOrderLine->setStatus(SaleOrderLine::STATUS_INVOICED);
+                        $saleOrderLine->getSaleOrder()->updateStatus();    
                     } else {
                         $this->logger->alert('Invoice not found');
                     }
-                    
-                   
             }
             $this->bigBuyStorage->write('Invoices/'.$saleOrderLine->getSaleOrder()->getOrderNumber().'_'.date('Ymd_His').'.csv', $csv->toString());
             $this->manager->flush();
