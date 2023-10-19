@@ -34,18 +34,20 @@ class OrdersStatusInvoice
     {
         $saleOrderLines = $this->manager->getRepository(SaleOrderLine::class)->findBy(['status'=>SaleOrderLine::STATUS_CONFIRMED]);
       
-
+        $invoices = [];
         if(count($saleOrderLines)>0){
 
             $csv = Writer::createFromString();
             $csv->setDelimiter(';');
             $csv->insertOne(['invoice_number','delivery_note_number','sku','price','tax','digital_canon','eco_tax','quantity','type','date']);
             foreach($saleOrderLines as $saleOrderLine) {
-                    $invoiceBc = $this->bcConnector->getSaleInvoiceByNumber($saleOrderLine->getInvoiceNumber());
-                    if($invoiceBc) {
+                    if(!array_key_exists($saleOrderLine->getInvoiceNumber(), $invoices)){
+                        $invoices[$saleOrderLine->getInvoiceNumber()] = $this->bcConnector->getSaleInvoiceByNumber($saleOrderLine->getInvoiceNumber());   
+                    }
+                    if($invoices[$saleOrderLine->getInvoiceNumber()]) {
                         $saleOrderLine->addLog('Confirmed invoice');
                         
-                        foreach($invoiceBc['salesInvoiceLines'] as $salesInvoiceLine) {
+                        foreach($invoices[$saleOrderLine->getInvoiceNumber()]['salesInvoiceLines'] as $salesInvoiceLine) {
                             if(in_array($salesInvoiceLine['lineType'], ['Item', 'Producto']) 
                                     && $salesInvoiceLine['sequence']==(int)$saleOrderLine->getLineNumber()
                                     && $salesInvoiceLine['quantity']>0
@@ -62,7 +64,7 @@ class OrdersStatusInvoice
                                 
     
                                 $csv->insertOne([
-                                    $invoiceBc["number"],
+                                    $invoices[$saleOrderLine->getInvoiceNumber()]["number"],
                                     $saleOrderLine->getShipmentNumber(),
                                     $saleOrderLine->getSku(),
                                     $salesInvoiceLine['netAmount'],
@@ -71,7 +73,7 @@ class OrdersStatusInvoice
                                    0,
                                    $salesInvoiceLine['quantity'],
                                    'type_product',
-                                   $invoiceBc['invoiceDate']
+                                   $invoices[$saleOrderLine->getInvoiceNumber()]['invoiceDate']
                                 ]);
                                 
     
