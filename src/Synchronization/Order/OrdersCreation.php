@@ -60,7 +60,7 @@ class OrdersCreation
         }
 
         if(count($this->errors)>0) {
-            $this->sendEmail->sendEmail(['devops@kpsport.com'], 'Order errors', implode('<br/>', $this->errors));
+            $this->sendEmail->sendEmail(['devops@kpsport.com', 'jit@bigbuy.eu'], '[KPS] Cancelación de pedidos', implode('<br/>', $this->errors));
         }
 
         $this->logger->info($nbIntegrated.' orders integrated');
@@ -252,7 +252,7 @@ class OrdersCreation
         $keyOrder  = array_key_exists('order_id', $errors[0]) ? 'order_id' : 'id';
         $lines = [[$keyOrder, 'sku', 'quantity','price', 'error']];
 
-        $this->errors[] = 'Order '.$errors[0][$keyOrder].' cannot be integrated in our system';
+        $this->errors[] = 'Pedido '.$errors[0][$keyOrder].' no puede integrarse en nuestro sistema';
         foreach($errors as $error) {
             $line = [
                 $error[$keyOrder],
@@ -261,7 +261,7 @@ class OrdersCreation
                 $error['price'],
             ];
             if(array_key_exists('error', $error)) {
-                $this->errors[] ='For requested SKU '.$error['sku']. ' with qty '.$error['quantity'].' >>> error '.$error['error'];
+                $this->errors[] ='Para SKU solicitado '.$error['sku']. ' con cantidad '.$error['quantity'].' >>> error '.$error['error'];
                 $line[] = $error['error'];
             } else {
                 $line[] = null;
@@ -305,12 +305,12 @@ class OrdersCreation
         // check if sku exists
         $itemBc = $this->bcConnector->getItemByNumber($saleLine['sku']);
         if(!$itemBc) {
-            return 'SKU unknown '.$saleLine['sku'];
+            return 'SKU desconocido '.$saleLine['sku'];
         }
 
         $product = $this->manager->getRepository(Product::class)->findOneBy(['sku'=>$saleLine['sku']]);
         if(!$product) {
-            return 'Sku with no correlation '.$saleLine['sku'];
+            return 'Sku sin correlación '.$saleLine['sku'];
         }
 
         /* if(!$product->getPrice()) {
@@ -320,11 +320,11 @@ class OrdersCreation
         // check availability
         $stockAvailability = $this->bcConnector->getStockAvailabilityPerProduct($saleLine['sku']);
         if(!$stockAvailability) {
-            return 'No stock '.$saleLine['sku'];
+            return 'Sin existencias '.$saleLine['sku'];
         }
 
         if($stockAvailability['quantityAvailableLAROCA'] < $saleLine['quantity']) {
-            return 'No enough stock '.$saleLine['sku'].' >> '.$stockAvailability['quantityAvailableLAROCA'].' available for '.$saleLine['quantity'].' requested' ;
+            return 'No hay suficiente stock '.$saleLine['sku'].' >> '.$stockAvailability['quantityAvailableLAROCA'].' disponible para '.$saleLine['quantity'].' solicitado' ;
         }
 
         return null;
