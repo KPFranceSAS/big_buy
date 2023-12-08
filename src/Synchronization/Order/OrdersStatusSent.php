@@ -27,6 +27,7 @@ class OrdersStatusSent
     
     public function synchronize()
     {
+        $errors = [];
         $saleOrderLines = $this->manager->getRepository(SaleOrderLine::class)->findBy(['status'=>SaleOrderLine::STATUS_RELEASED]);
         foreach($saleOrderLines as $saleOrderLine) {
             try {
@@ -43,10 +44,15 @@ class OrdersStatusSent
                 }
                     
             } catch (Exception $e) {
-                $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
-                $this->sendEmail->sendAlert('Error OrdersStatusSent ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
+                $error = $e->getMessage().' // '.$e->getFile().' // '.$e->getLine();
+                $this->logger->critical($error);
+                $errors[]=$error;
             }
             $saleOrderLine->getSaleOrder()->updateStatus();
+        }
+
+        if(count($errors)>0) {
+            $this->sendEmail->sendAlert('Error OrdersStatusSent ', implode('<br/>----<br/>', $errors));
         }
 
         $this->manager->flush();
@@ -70,7 +76,7 @@ class OrdersStatusSent
     protected function isSaleOrderLineSent($orderNumber, $sequence)
     {
 
-        if(!array_key_exists($orderNumber, $this->statuses)){
+        if(!array_key_exists($orderNumber, $this->statuses)) {
             $status =  $this->bcConnector->getStatusOrderByNumber($orderNumber);
             if (!$status) {
                 $this->logger->info("Status not found for moment " . $orderNumber);
@@ -79,11 +85,11 @@ class OrdersStatusSent
                 $this->logger->info("Status found by reference to the order number " . $orderNumber);
                 $this->statuses[$orderNumber]=$status;
             }
-        } 
+        }
 
 
-        foreach($this->statuses[$orderNumber]['statusOrderLines'] as $statutOrderline){
-            if((int)$sequence == $statutOrderline['sequence']){
+        foreach($this->statuses[$orderNumber]['statusOrderLines'] as $statutOrderline) {
+            if((int)$sequence == $statutOrderline['sequence']) {
                 if (in_array($statutOrderline['statusCode'], ["3", "4"]) && (int)$sequence == $statutOrderline['sequence']) {
                     $this->logger->info("Sale order is sent " . $orderNumber);
                     return $statutOrderline;

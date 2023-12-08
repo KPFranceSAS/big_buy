@@ -31,7 +31,7 @@ class OrdersStatusRelease
     {
         $saleOrders = $this->manager->getRepository(SaleOrder::class)->findBy(['status'=>SaleOrder::STATUS_WAITING_RELEASE]);
         $datenow = new DateTime();
-       
+        $errors = [];
         foreach($saleOrders as $saleOrder) {
             try {
                 $this->logger->info('Check sale order has been release '.$saleOrder->getOrderNumber());
@@ -56,10 +56,15 @@ class OrdersStatusRelease
                 }
                 $this->manager->flush();
             } catch (Exception $e) {
-                $this->logger->critical($e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
-                $this->sendEmail->sendAlert('Error OrdersStatusRelease ', $e->getMessage().' // '.$e->getFile().' // '.$e->getLine());
+                $error = $e->getMessage().' // '.$e->getFile().' // '.$e->getLine();
+                $this->logger->critical($error);
+                $errors[]=$error;
             }
             
+        }
+
+        if(count($errors)>0) {
+            $this->sendEmail->sendAlert('Error OrdersStatusRelease ', implode('<br/>----<br/>', $errors));
         }
     }
 
