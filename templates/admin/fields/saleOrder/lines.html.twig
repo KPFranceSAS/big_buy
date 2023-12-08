@@ -53,9 +53,13 @@
     <span class="badge badge-success">
 		Invoice sent
 	</span>
+{% elseif  saleLine.status == 7 %}
+    <span class="badge badge-default">
+		Cancelled
+	</span>
 {% else %}	
 	<span class="badge badge-default">
-		Unknown ({{entity.instance.saleOrder.status}})
+		Unknown ({{entity.instance.status}})
 	</span>
 {% endif %}
                         </td>
