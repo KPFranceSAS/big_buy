@@ -60,7 +60,7 @@ class OrdersCreation
         }
 
         if(count($this->errors)>0) {
-            $this->sendEmail->sendEmail(['devops@kpsport.com', 'jit@bigbuy.eu'], '[KPS] Cancelación de pedidos', implode('<br/>', $this->errors));
+            $this->sendEmail->sendEmail(['devops@kpsport.com'], '[KPS] Cancelación de pedidos', implode('<br/>', $this->errors));
         }
 
         $this->logger->info($nbIntegrated.' orders integrated');
