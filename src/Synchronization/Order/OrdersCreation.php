@@ -346,7 +346,7 @@ class OrdersCreation
             } else {
                 $this->logger->alert('Not same number of column');
                 $newdatas=[];
-                for($i=0;$i<count($values);$i++) {
+                for($i=0;$i<count($header);$i++) {
                     $newdatas[$header[$i]]=$values[$i];
                 }
                 $datas[]=$newdatas;
