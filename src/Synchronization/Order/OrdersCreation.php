@@ -341,8 +341,19 @@ class OrdersCreation
         foreach ($contentArray as $contentLine) {
             $values = explode(";", $contentLine);
             if (count($values) == count($header)) {
+                $this->logger->info('Same number of column');
                 $datas[] = array_combine($header, $values);
+            } else {
+                $this->logger->alert('Not same number of column');
+                $newdatas=[];
+                for($i=0;$i<count($values);$i++) {
+                    $newdatas[$header[$i]]=$values[$i];
+                }
+                $datas[]=$newdatas;
             }
+           
+
+
         }
         return $datas;
         
