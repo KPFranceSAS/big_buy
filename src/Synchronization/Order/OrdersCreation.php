@@ -82,6 +82,8 @@ class OrdersCreation
         $saleLinesArray = $this->extractContent($listFile->path());
 
         $this->logger->info('Sale lines in array  >>>'.count($saleLinesArray));
+
+        
         $errorOrder=false;
         foreach($saleLinesArray as $k => $saleLineArray) {
             $error = $this->checkLine($saleLineArray);
@@ -94,6 +96,9 @@ class OrdersCreation
         }
         
         try {
+            if(count($saleLinesArray)==0) {
+                throw new Exception('File '.$listFile->path().' seems to be empty');
+            }
             $dateRelease =  CalculatorNext::getNextDelivery(new DateTime('now'), $this->closingHours);
                 
             $this->logger->info('Release date '. $dateRelease->format('Y-m-d H:i'));
