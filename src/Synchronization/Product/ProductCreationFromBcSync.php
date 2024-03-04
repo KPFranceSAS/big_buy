@@ -35,12 +35,18 @@ class ProductCreationFromBcSync
 
     protected function getProductsByBrand($brand)
     {
-        $searchBuilder = new SearchBuilder();
-        $searchBuilder
-            ->addFilter('brand', 'IN', [$brand])
-            ->addFilter('enabled', '=', true);
+        try {
+            $searchBuilder = new SearchBuilder();
+            $searchBuilder
+               ->addFilter('brand', 'IN', [$brand])
+               ->addFilter('erp_product_type', 'IN', ['goods'])
+               ->addFilter('enabled', '=', true);
 
-        return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
+            return $this->akeneoConnector->searchProducts($searchBuilder, 'platform_b2b');
+        } catch (Exception $e) {
+            return [];
+        }
+        
     }
 
     
@@ -86,7 +92,7 @@ class ProductCreationFromBcSync
                     $errors [] = $e->getMessage();
                     $this->logger->critical('Error '.$e->getMessage());
                 }
-                 $this->manager->flush();
+                $this->manager->flush();
             }
         }
         
