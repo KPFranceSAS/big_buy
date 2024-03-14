@@ -135,7 +135,7 @@ class PricesFromBcSync
     protected function getFinalStockComponentWarehouse($sku, $depot = self::DEPOT_LAROCA): int
     {
         $stock = $this->getStockAvailability($sku, $depot);
-        return ($stock > 10) ? ($stock - 10) : 0;
+        return ($stock > 1) ? ($stock - 1) : 0;
     }
 
 
