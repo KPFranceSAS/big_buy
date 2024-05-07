@@ -87,9 +87,10 @@ class ImportPricingCrudController extends AdminCrudController
         }
 
         $lines = [
-                ['Sku', 'Price'],
-                ['XXX-SKU', '125'],
-                ['XXX-SKU-2', '135,25']
+                ['Sku', 'Price', 'Force Price'],
+                ['XXX-SKU', '125', ''],
+                ['XXX-SKU-2', '135,25', ''],
+                ['XXX-SKU-5', '135,25', '1']
         ];
 
         
@@ -256,6 +257,7 @@ class ImportPricingCrudController extends AdminCrudController
             return false;
         }
 
+        /** @var Product  */
         $productDb =  $this->container->get('doctrine')->getManager()->getRepository(Product::class)->findOneBySku(trim($line["Sku"]));
         if (!$productDb) {
             $this->addError($importPricing, 'No product with sku ' . $line["Sku"]. ' on line '.$lineNumber);
@@ -271,6 +273,14 @@ class ImportPricingCrudController extends AdminCrudController
             $this->addError($importPricing, 'Price '.$priceFormatted .'is not correct on  line '.$lineNumber);
             return false;
         }
+
+        if (array_key_exists('Force Price', $line) && (int)$line['Force Price'] == 1) {
+            $productDb->setForcePrice(true);
+        } else {
+            $productDb->setForcePrice(false);
+        }
+
+
 
         $productDb->setPrice(floatval(str_replace(',', '.', $line["Price"])));
 
