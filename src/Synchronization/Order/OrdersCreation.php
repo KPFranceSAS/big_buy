@@ -96,18 +96,18 @@ class OrdersCreation
         }
         
         try {
+            $dateRelease =  CalculatorNext::getNextDelivery(new DateTime('now'), $this->closingHours);
+            $this->logger->info('Release date '. $dateRelease->format('Y-m-d H:i'));
+            $saleOrder = $this->getSaleOrder($dateRelease);
+
+
             if(count($saleLinesArray)==0) {
                 $newName = str_replace('Orders/', 'Orders/Error/', $listFile->path());
                 
                 $this->bigBuyStorage->move($listFile->path(), $newName);
-
-
                 throw new Exception('File '.$listFile->path().' seems to be empty');
             }
-            $dateRelease =  CalculatorNext::getNextDelivery(new DateTime('now'), $this->closingHours);
-                
-            $this->logger->info('Release date '. $dateRelease->format('Y-m-d H:i'));
-            $saleOrder = $this->getSaleOrder($dateRelease);
+       
             $saleOrderBc = $this->bcConnector->getSaleOrderByNumber($saleOrder->getOrderNumber());
             foreach($saleLinesArrayToIntegrate as $k => $saleLineArray) {
                 $this->addSaleOrderLine($saleOrder, $saleOrderBc, $saleLineArray);
@@ -132,6 +132,7 @@ class OrdersCreation
             $message = mb_convert_encoding($e->getMessage(), "UTF-8", "UTF-8");
 
             $this->sendEmail->sendAlert('Error OrdersCreation', $message.'<br/>'.$e->getTraceAsString());
+            if()
             $saleOrder->addError('Error '.$message);
         }
         $this->manager->flush();
