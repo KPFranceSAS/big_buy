@@ -97,6 +97,11 @@ class OrdersCreation
         
         try {
             if(count($saleLinesArray)==0) {
+                $newName = str_replace('Orders/', 'Orders/Error/', $listFile->path());
+                
+                $this->bigBuyStorage->move($listFile->path(), $newName);
+
+
                 throw new Exception('File '.$listFile->path().' seems to be empty');
             }
             $dateRelease =  CalculatorNext::getNextDelivery(new DateTime('now'), $this->closingHours);
