@@ -132,7 +132,6 @@ class OrdersCreation
             $message = mb_convert_encoding($e->getMessage(), "UTF-8", "UTF-8");
 
             $this->sendEmail->sendAlert('Error OrdersCreation', $message.'<br/>'.$e->getTraceAsString());
-            if()
             $saleOrder->addError('Error '.$message);
         }
         $this->manager->flush();
