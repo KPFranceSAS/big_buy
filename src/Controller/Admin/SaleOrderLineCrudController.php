@@ -44,7 +44,7 @@ class SaleOrderLineCrudController extends AdminCrudController
             NumberField::new('totalPrice')->setDisabled(true)->setThousandsSeparator(''),
             NumberField::new('margin')->setDisabled(true)->setThousandsSeparator(''),
             TextField::new('marginRate')->setDisabled(true)->setColumns(3),
-            IntegerField::new('status')->setTemplatePath('admin/fields/saleOrder/status.html.twig'),
+            IntegerField::new('status')->setTemplatePath('admin/fields/saleOrderLine/status.html.twig'),
         ];
     }
 
