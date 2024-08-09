@@ -25,7 +25,7 @@ class SaleOrderCrudController extends AdminCrudController
 
     public function getDefautOrder(): array
     {
-        return ['releaseDate' => "DESC"];
+        return ['id' => "DESC"];
     }
 
 
