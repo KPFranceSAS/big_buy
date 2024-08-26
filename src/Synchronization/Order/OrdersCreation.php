@@ -224,7 +224,10 @@ class OrdersCreation
 
     protected function getSaleOrder(DateTime $dateTime): SaleOrder
     {
-        $saleOrder = $this->manager->getRepository(SaleOrder::class)->findOneBy(['releaseDateString'=>$dateTime->format('Y-m-d H:i')]);
+        $saleOrder = $this->manager->getRepository(SaleOrder::class)->findOneBy([
+            'releaseDateString'=>$dateTime->format('Y-m-d H:i'),
+            'status' => SaleOrder::STATUS_OPEN
+        ]);
         if(!$saleOrder) {
             $customerBc = $this->bcConnector->getCustomerByNumber(self::CUSTOMER_NUMBER);
 
