@@ -35,14 +35,14 @@ class ProductExportSync
     {
         $productToArrays=[];
         $brandEnableds= $this->manager->getRepository(Brand::class)->findByEnabled(true);
-        foreach($brandEnableds as $brandEnabled) {
+        foreach ($brandEnableds as $brandEnabled) {
 
             $this->logger->info('Get Products form '.$brandEnabled->getCode());
             $products= $this->getProductsByBrand($brandEnabled->getCode());
             foreach ($products as $product) {
                 $productDb = $this->manager->getRepository(Product::class)->findOneBySku($product['identifier']);
 
-                if($productDb && $productDb->isEnabled()) {
+                if ($productDb && $productDb->isEnabled()) {
                     $productToArray = $this->flatProduct($product);
                     $productToArrays[]= $productToArray;
                 }
@@ -60,6 +60,7 @@ class ProductExportSync
         $flatProduct = [
             'sku' => $product['identifier'],
             'ean' => $this->getAttributeSimple($product, 'ean'),
+            'mpn' => $this->getAttributeSimple($product, 'manufacturer_number'),
             'erp_name' => $this->getAttributeSimple($product, 'erp_name'),
             'family' => $this->getFamilyName($product['family'], $this->getLocale()),
             'category' => $this->getCategoriePath($product['categories']),
@@ -163,7 +164,7 @@ class ProductExportSync
 
         foreach ($multichoices as $multichoice) {
             $valueConverted = $this->getAttributeMultiChoice($product, $multichoice, $this->getLocale());
-            if($valueConverted) {
+            if ($valueConverted) {
                 $flatProduct ['attributes'][$multichoice] = $valueConverted;
             }
         }
@@ -183,7 +184,7 @@ class ProductExportSync
 
         foreach ($choices as $choice) {
             $valueConverted = $this->getAttributeChoice($product, $choice, $this->getLocale());
-            if($valueConverted) {
+            if ($valueConverted) {
                 $flatProduct ['attributes'][$choice] = $valueConverted;
             }
         }
@@ -305,7 +306,7 @@ class ProductExportSync
 
         foreach ($units as $fieldPim) {
             $valueConverted = $this->getAttributeUnit($product, $fieldPim['field'], $fieldPim['unit'], $fieldPim['round']);
-            if($valueConverted) {
+            if ($valueConverted) {
                 $valueConverted = $valueConverted.' '.$fieldPim['convertUnit'];
                 $flatProduct ['attributes'][$fieldPim['field']] = $valueConverted;
             }
@@ -429,7 +430,7 @@ class ProductExportSync
 
     protected function getTranslationOption($attributeCode, $code, $locale)
     {
-        if(!array_key_exists($attributeCode.'_'.$code, $this->attributes)) {
+        if (!array_key_exists($attributeCode.'_'.$code, $this->attributes)) {
             $this->attributes[$attributeCode.'_'.$code] = $this->akeneoConnector->getAttributeOption($attributeCode, $code);
         }
         return array_key_exists($locale, $this->attributes[$attributeCode.'_'.$code]['labels']) ? $this->attributes[$attributeCode.'_'.$code]['labels'][$locale] : $code;
@@ -440,7 +441,7 @@ class ProductExportSync
 
     protected function getFamilyName($identifier, $langage)
     {
-        if(!array_key_exists($identifier, $this->families)) {
+        if (!array_key_exists($identifier, $this->families)) {
             $this->families[$identifier] = $this->akeneoConnector->getFamily($identifier);
         }
         return array_key_exists($langage, $this->families[$identifier]['labels']) ? $this->families[$identifier]['labels'][$langage] : $identifier;
@@ -682,7 +683,7 @@ class ProductExportSync
     {
         $this->categories=[];
         $categoriePims = $this->akeneoConnector->getAllCategories();
-        foreach($categoriePims as $category) {
+        foreach ($categoriePims as $category) {
             $this->categories[ $category['code']] = $category;
         }
     }
@@ -691,25 +692,25 @@ class ProductExportSync
 
     protected function getCategoriePath(array $categories)
     {
-        if(!$this->categories) {
+        if (!$this->categories) {
             $this->getAllCategories();
         }
         $deepestCategories = null;
-        foreach($categories as $categorie) {
+        foreach ($categories as $categorie) {
             $access = $this->getAccessCategories($categorie);
             $lastLevel = end($access);
-            if($lastLevel && $lastLevel['code']=='kps_tech') {
-                if(!$deepestCategories || count($deepestCategories) < count($access)) {
+            if ($lastLevel && $lastLevel['code']=='kps_tech') {
+                if (!$deepestCategories || count($deepestCategories) < count($access)) {
                     $deepestCategories = $access;
                 }
             }
             
         }
 
-        if($deepestCategories) {
+        if ($deepestCategories) {
             $paths = [];
-            foreach($deepestCategories as  $deepestCategorie) {
-                if($deepestCategorie['code']!='kps_tech') {
+            foreach ($deepestCategories as $deepestCategorie) {
+                if ($deepestCategorie['code']!='kps_tech') {
                     $paths[]= $deepestCategorie['labels']['es_ES'];
                 }
                 
@@ -727,10 +728,10 @@ class ProductExportSync
     {
         $access = [];
         $continue =true;
-        while($continue) {
+        while ($continue) {
             $categoryPim = $this->categories[$slug];
             $access[]= $categoryPim;
-            if($categoryPim['parent']) {
+            if ($categoryPim['parent']) {
                 $slug = $categoryPim['parent'];
             } else {
                 $continue = false;
