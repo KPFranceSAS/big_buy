@@ -60,7 +60,7 @@ class ProductExportSync
         $flatProduct = [
             'sku' => $product['identifier'],
             'ean' => $this->getAttributeSimple($product, 'ean'),
-            'mpn' => $this->getAttributeSimple($product, 'manufacturer_number'),
+            'manufacturer_number' => $this->getAttributeSimple($product, 'manufacturer_number'),
             'erp_name' => $this->getAttributeSimple($product, 'erp_name'),
             'family' => $this->getFamilyName($product['family'], $this->getLocale()),
             'category' => $this->getCategoriePath($product['categories']),
