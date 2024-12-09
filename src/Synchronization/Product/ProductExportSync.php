@@ -52,6 +52,7 @@ class ProductExportSync
     {
         $productToArrays=[];
         $brandEnableds= $this->manager->getRepository(Brand::class)->findByEnabled(true);
+        $this->getAllVendors();
         foreach ($brandEnableds as $brandEnabled) {
 
             $this->logger->info('Get Products form '.$brandEnabled->getCode());
