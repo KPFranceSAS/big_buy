@@ -11,21 +11,6 @@ abstract class BusinessCentralConnector
 {
 
 
-    public static function getItinialesCompany(string $company)
-    {
-        if($company==BusinessCentralConnector::INIA) {
-           
-            return 'INIA';
-        } elseif($company==BusinessCentralConnector::KIT_PERSONALIZACION_SPORT) {
-            return 'KPS';
-        } elseif($company==BusinessCentralConnector::KP_FRANCE) {
-            return 'KPF';
-        } elseif($company==BusinessCentralConnector::KP_UK) {
-            return 'KPUK';
-        }
-    }
-
-
     public const STOCK_LAROCA = "LAROCA";
     public const STOCK_PLUK = "3PLUK";
 
@@ -34,7 +19,7 @@ abstract class BusinessCentralConnector
     public const KIT_PERSONALIZACION_SPORT = "KIT PERSONALIZACION SPORT SL";
     public const INIA = "INIA SLU";
     public const KP_UK = "KP UK";
-
+    public const TURISPORT = "TURISPORT SL";
 
     public const EP_CUSTOMER_PAYMENT_JOURNALS = "customerPaymentJournals";
 
@@ -63,6 +48,8 @@ abstract class BusinessCentralConnector
     public const EP_ITEM_PRICES = "SalesPrices";
 
     public const EP_ITEM_DISCOUNT= "SalesLineDiscount";
+
+    public const EP_VENDORS = "vendors";
 
     protected $logger;
 
@@ -103,22 +90,18 @@ abstract class BusinessCentralConnector
 
     abstract public function getDefaultWarehouse();
 
-    public function getJournalPayment()
-    {
-        return 'MOLLIE';
-    }
-
-
-    public function getAccountNumberBank()
-    {
-        return "2024";
-    }
-
-
-    abstract public function getVendorNumberMollie();
 
     abstract public function getAccountNumberForExpedition();
     
+
+    /**
+     * Vendor
+     */
+    public function getAllVendors()
+    {
+        return $this->getAll(self::EP_VENDORS);
+    }
+
 
 
     public function doDeleteRequest(string $endPoint)

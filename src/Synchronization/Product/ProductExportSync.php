@@ -3,6 +3,7 @@
 namespace App\Synchronization\Product;
 
 use Akeneo\Pim\ApiClient\Search\SearchBuilder;
+use App\BusinessCentral\Connector\BusinessCentralAggregator;
 use App\BusinessCentral\Connector\KitPersonalizacionSportConnector;
 use App\Entity\Brand;
 use App\Entity\Product;
@@ -23,12 +24,28 @@ class ProductExportSync
         private AkeneoConnector $akeneoConnector,
         private ManagerRegistry $managerRegistry,
         private KitPersonalizacionSportConnector $bcConnector,
+        private BusinessCentralAggregator $businessCentralAggregator,
         private FilesystemOperator $defaultStorage,
         private FilesystemOperator $bigBuyStorage,
         private SendEmail $sendEmail
     ) {
         $this->manager = $this->managerRegistry->getManager();
     }
+
+    private $vendors = [];
+
+
+    public function getAllVendors()
+    {
+        $companies = $this->businessCentralAggregator->getAllCompanies();
+        foreach($companies as $company){
+            $vendors = $this->businessCentralAggregator->getBusinessCentralConnector($company)->getAllVendors();
+            foreach ($vendors as $vendor) {
+                $this->vendors[$this->businessCentralAggregator->getInitiales($company).'_'.$vendor['number']]=$vendor;
+            }
+        }
+    }
+
 
     
     public function synchronize()
@@ -67,14 +84,52 @@ class ProductExportSync
             'parent' => $product['parent'],
             'title' => $this->getAttributeSimpleScopable($product, "article_name", 'Marketplace', $this->getLocale()),
             'brandName' => $this->getAttributeChoice($product, 'brand', $this->getLocale()),
-            'description' =>  $this->getAttributeSimpleScopable($product, 'description', 'Marketplace', $this->getLocale())
+            'description' =>  $this->getAttributeSimpleScopable($product, 'description', 'Marketplace', $this->getLocale()),
+            'user_guide_url' => $this->getAttributeSimple($product, 'user_guide_url', $this->getLocale())
         ];
+
+        $item = $this->bcConnector->getItemByNumber($product['identifier']);
+        
+        if ($item) {
+            $manufacturerNumber =  $this->businessCentralAggregator->getInitiales($item['owningCompany']).'_'.$item['VendorNo'];
+            if (array_key_exists($manufacturerNumber, $this->vendors)) {
+                $vendor = $this->vendors[$manufacturerNumber];
+                if($this->isCountryInEU($vendor['address']['countryLetterCode'])){
+                    $flatProduct['gpsr_manufacturer_eu_responsible_name'] = $vendor['displayName'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_address'] = $vendor['address']['street'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_contact'] = $vendor['displayName'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_country'] = $vendor['address']['countryLetterCode'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_city'] = $vendor['address']['city'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_postal_code'] = $vendor['address']['postalCode'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = $vendor['email'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_phone_number'] = null;
+                } else {
+                    $flatProduct['gpsr_manufacturer_eu_responsible_name'] = 'KIT PERSONALIZACIÓN SPORT S.L';
+                    $flatProduct['gpsr_manufacturer_eu_responsible_address'] = 'Carrer Isaac Newton, 8';
+                    $flatProduct['gpsr_manufacturer_eu_responsible_contact'] = 'KIT PERSONALIZACIÓN SPORT S.L';
+                    $flatProduct['gpsr_manufacturer_eu_responsible_country'] = "ES";
+                    $flatProduct['gpsr_manufacturer_eu_responsible_city'] = 'La Roca del Vallès, Barcelona';
+                    $flatProduct['gpsr_manufacturer_eu_responsible_postal_code'] = '08430';
+                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = "info@kpsport.com";
+                    $flatProduct['gpsr_manufacturer_eu_responsible_phone_number'] = '(+34) 93 572 30 21';
+                }
+            } else {
+                $this->logger->alert('Not found supplier with '.$manufacturerNumber);
+            }
+        } else {
+            
+        }
+
+
 
         for ($i = 1; $i <= 5;$i++) {
             $imageLocale = $this->getAttributeSimple($product, 'image_url_loc_'.$i, $this->getLocale());
             $flatProduct['image_'.$i] =$imageLocale ? $imageLocale : $this->getAttributeSimple($product, 'image_url_'.$i);
         }
 
+        $flatProduct['image_gpsr_label'] = null;
+        
+        
 
         $dimensionsToConvert = [
             "length" => [
@@ -313,6 +368,24 @@ class ProductExportSync
         }
 
         return $flatProduct;
+    }
+
+
+
+    protected function isCountryInEU($countryCode)
+    {
+        // Array of country codes that belong to the European Union (ISO 3166-1 alpha-2)
+        $euCountries = [
+            'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
+            'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
+            'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE'
+        ];
+    
+        // Convert input country code to uppercase to ensure case insensitivity
+        $countryCode = strtoupper($countryCode);
+    
+        // Check if the country code is in the array of EU country codes
+        return in_array($countryCode, $euCountries);
     }
 
 

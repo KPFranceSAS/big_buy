@@ -4,11 +4,11 @@ namespace App\BusinessCentral\Connector;
 
 use App\BusinessCentral\Connector\BusinessCentralConnector;
 
-class KitPersonalizacionSportConnector extends BusinessCentralConnector
+class IniaConnector extends BusinessCentralConnector
 {
     public function getCompanyIntegration()
     {
-        return BusinessCentralConnector::KIT_PERSONALIZACION_SPORT;
+        return BusinessCentralConnector::INIA;
     }
 
 
@@ -17,11 +17,8 @@ class KitPersonalizacionSportConnector extends BusinessCentralConnector
         return '7591001';
     }
 
-
-
     public function getDefaultWarehouse()
     {
         return BusinessCentralConnector::STOCK_LAROCA;
     }
-
 }
