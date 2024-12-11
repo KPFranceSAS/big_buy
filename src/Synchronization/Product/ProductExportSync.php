@@ -38,7 +38,7 @@ class ProductExportSync
     public function getAllVendors()
     {
         $companies = $this->businessCentralAggregator->getAllCompanies();
-        foreach($companies as $company){
+        foreach ($companies as $company) {
             $vendors = $this->businessCentralAggregator->getBusinessCentralConnector($company)->getAllVendors();
             foreach ($vendors as $vendor) {
                 $this->vendors[$this->businessCentralAggregator->getInitiales($company).'_'.$vendor['number']]=$vendor;
@@ -95,23 +95,23 @@ class ProductExportSync
             $manufacturerNumber =  $this->businessCentralAggregator->getInitiales($item['owningCompany']).'_'.$item['VendorNo'];
             if (array_key_exists($manufacturerNumber, $this->vendors)) {
                 $vendor = $this->vendors[$manufacturerNumber];
-                if($this->isCountryInEU($vendor['address']['countryLetterCode'])){
+                if ($this->isCountryInEU($vendor['address']['countryLetterCode'])) {
                     $flatProduct['gpsr_manufacturer_eu_responsible_name'] = $vendor['displayName'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_address'] = $vendor['address']['street'];
-                    $flatProduct['gpsr_manufacturer_eu_responsible_contact'] = $vendor['displayName'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_contact'] = $vendor['email'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_country'] = $vendor['address']['countryLetterCode'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_city'] = $vendor['address']['city'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_postal_code'] = $vendor['address']['postalCode'];
-                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = $vendor['email'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = $vendor['website'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_phone_number'] = null;
                 } else {
                     $flatProduct['gpsr_manufacturer_eu_responsible_name'] = 'KIT PERSONALIZACIÓN SPORT S.L';
                     $flatProduct['gpsr_manufacturer_eu_responsible_address'] = 'Carrer Isaac Newton, 8';
-                    $flatProduct['gpsr_manufacturer_eu_responsible_contact'] = 'KIT PERSONALIZACIÓN SPORT S.L';
+                    $flatProduct['gpsr_manufacturer_eu_responsible_contact'] = "info@kpsport.com";
                     $flatProduct['gpsr_manufacturer_eu_responsible_country'] = "ES";
                     $flatProduct['gpsr_manufacturer_eu_responsible_city'] = 'La Roca del Vallès, Barcelona';
                     $flatProduct['gpsr_manufacturer_eu_responsible_postal_code'] = '08430';
-                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = "info@kpsport.com";
+                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = "https://kp-group.eu";
                     $flatProduct['gpsr_manufacturer_eu_responsible_phone_number'] = '(+34) 93 572 30 21';
                 }
             } else {
