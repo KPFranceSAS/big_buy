@@ -102,7 +102,7 @@ class ProductExportSync
                     $flatProduct['gpsr_manufacturer_eu_responsible_country'] = $vendor['address']['countryLetterCode'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_city'] = $vendor['address']['city'];
                     $flatProduct['gpsr_manufacturer_eu_responsible_postal_code'] = $vendor['address']['postalCode'];
-                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = $vendor['website'];
+                    $flatProduct['gpsr_manufacturer_eu_responsible_website'] = strlen($vendor['website'])>0 ? $vendor['website'] : null;
                     $flatProduct['gpsr_manufacturer_eu_responsible_phone_number'] = null;
                 } else {
                     $flatProduct['gpsr_manufacturer_eu_responsible_name'] = 'KIT PERSONALIZACIÓN SPORT S.L';
